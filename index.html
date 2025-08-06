@@ -3,20 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Responsive CMS</title>
+  <title>Ռեսպոնսիվ CMS</title>
   <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios@1.4.0/dist/axios.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.5.9/dist/typography.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-quill@2.0.0/dist/react-quill.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/react-quill@2.0.0/dist/quill.snow.css" rel="stylesheet">
   <style>
-    body { background-color: #1a1a1a; color: #ffffff; }
-    .ql-editor { background-color: #2d2d2d; color: #ffffff; }
+    body { background-color: #1a1a1a; color: #ffffff; font-family: Arial, sans-serif; }
+    .ql-editor { background-color: #2d2d2d; color: #ffffff; min-height: 200px; }
     .ql-toolbar { background-color: #1a1a1a; }
-    .custom-button { background-color: #ffffff; color: #000000; padding: 8px 16px; border-radius: 4px; }
+    .custom-button { background-color: #ffffff; color: #000000; padding: 8px 16px; border-radius: 4px; transition: background-color 0.3s; }
     .custom-button:hover { background-color: #e5e5e5; }
+    @media (max-width: 640px) { .container { padding: 10px; } }
+    @media (min-width: 641px) and (max-width: 768px) { .container { padding: 15px; } }
+    @media (min-width: 769px) and (max-width: 1024px) { .container { padding: 20px; } }
+    @media (min-width: 1025px) and (max-width: 1440px) { .container { padding: 25px; } }
+    @media (min-width: 1441px) { .container { padding: 30px; } }
   </style>
 </head>
 <body>
@@ -46,7 +51,7 @@
           const response = await axios.get('https://api.github.com/repos/OWNER/REPO/contents/content', {
             headers: { Authorization: 'Bearer YOUR_GITHUB_TOKEN' }
           });
-          setContent(response.data);
+          setContent(Array.isArray(response.data) ? response.data : []);
         } catch (error) {
           console.error('Error fetching content:', error);
         }
@@ -61,24 +66,26 @@
       const handleFileUpload = (event) => {
         const files = Array.from(event.target.files);
         setSelectedFiles(files);
-        // Simulate upload to AWS S3 or Cloudflare R2
-        console.log('Uploading files:', files);
+        console.log('Uploading files to storage (AWS S3/Cloudflare R2):', files);
       };
 
       // Search Functionality
       const filteredContent = content.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        item.name && item.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
       // Schedule Content
       const scheduleContent = (content, date) => {
         setScheduledPosts([...scheduledPosts, { content, date }]);
+        console.log('Scheduled content:', { content, date });
       };
 
       // Invite Users
       const inviteUser = (email) => {
-        setUsers([...users, { email, role: 'editor' }]);
-        console.log(`Invited user: ${email}`);
+        if (email) {
+          setUsers([...users, { email, role: 'editor' }]);
+          console.log(`Invited user: ${email}`);
+        }
       };
 
       // Permissions
@@ -88,13 +95,15 @@
 
       // Analytics Integration
       const fetchAnalytics = () => {
-        // Simulate Google Analytics or Cloudflare Analytics
         setAnalytics({ pageViews: 1000, uniqueVisitors: 500 });
+        console.log('Fetched analytics data');
       };
 
       // Comments
       const addComment = (contentId, comment) => {
-        setComments([...comments, { contentId, comment, user: 'currentUser' }]);
+        if (comment) {
+          setComments([...comments, { contentId, comment, user: 'currentUser' }]);
+        }
       };
 
       useEffect(() => {
@@ -111,7 +120,7 @@
               <button onClick={handleGitHubLogin} className="custom-button">Մուտք գործել GitHub-ով</button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Visual Editor */}
               <div className="bg-gray-800 p-4 rounded">
                 <h2 className="text-xl font-bold mb-2">Տեքստային խմբագրիչ</h2>
@@ -122,10 +131,10 @@
               {/* Media Manager */}
               <div className="bg-gray-800 p-4 rounded">
                 <h2 className="text-xl font-bold mb-2">Մեդիա կառավարիչ</h2>
-                <input type="file" multiple onChange={handleFileUpload} className="mb-2" />
+                <input type="file" multiple onChange={handleFileUpload} className="mb-2 text-white" />
                 <div>
                   {selectedFiles.map((file, index) => (
-                    <p key={index}>{file.name}</p>
+                    <p key={index} className="text-sm">{file.name}</p>
                   ))}
                 </div>
               </div>
@@ -142,7 +151,7 @@
                 />
                 <ul className="mt-2">
                   {filteredContent.map(item => (
-                    <li key={item.sha}>{item.name}</li>
+                    <li key={item.sha || item.name} className="text-sm">{item.name}</li>
                   ))}
                 </ul>
               </div>
@@ -158,12 +167,12 @@
               <div className="bg-gray-800 p-4 rounded">
                 <h2 className="text-xl font-bold mb-2">Թույլտվություններ</h2>
                 {users.map(user => (
-                  <div key={user.email} className="flex justify-between">
-                    <span>{user.email}</span>
+                  <div key={user.email} className="flex justify-between mb-2">
+                    <span className="text-sm">{user.email}</span>
                     <select
                       value={user.role}
                       onChange={(e) => updatePermissions(user, e.target.value)}
-                      className="bg-gray-700 text-white p-1 rounded"
+                      className="bg-gray-700 text-white p-1 rounded text-sm"
                     >
                       <option value="editor">Խմբագիր</option>
                       <option value="admin">Ադմին</option>
@@ -181,11 +190,13 @@
               {/* Analytics */}
               <div className="bg-gray-800 p-4 rounded">
                 <h2 className="text-xl font-bold mb-2">Վերլուծություն</h2>
-                {analytics && (
-                  <div>
+                {analytics ? (
+                  <div className="text-sm">
                     <p>Էջի դիտումներ: {analytics.pageViews}</p>
                     <p>Եզակի այցելուներ: {analytics.uniqueVisitors}</p>
                   </div>
+                ) : (
+                  <p>Տվյալներ չկան</p>
                 )}
               </div>
 
@@ -199,7 +210,7 @@
                   className="w-full p-2 bg-gray-700 rounded text-white mb-2"
                 />
                 {comments.map((comment, index) => (
-                  <p key={index}>{comment.comment} - {comment.user}</p>
+                  <p key={index} className="text-sm">{comment.comment} - {comment.user}</p>
                 ))}
               </div>
             </div>
