@@ -1,165 +1,755 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hy">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyUI Պատվերի Ֆորմա</title>
-    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/default/easyui.css">
-    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/icon.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://www.jeasyui.com/easyui/jquery.easyui.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 15px;
-            background: #f5f5f5;
-            font-family: Arial, sans-serif;
-        }
-        .form-container {
-            max-width: 800px;
-            margin: auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .price-display {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #2196F3;
-            margin-top: 10px;
-        }
-        @media screen and (max-width: 600px) {
-            .fitem label {
-                display: block;
-                margin-bottom: 5px;
-            }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Admin Panel — Web App (Single File)</title>
+<style>
+  :root{
+    --bg:#0f1724; --card:#0b1220; --muted:#9aa6b2; --accent:#2dd4bf;
+    --glass: rgba(255,255,255,0.03);
+    --danger:#ef4444;
+    --success:#10b981;
+    --max-width:1200px;
+    font-family: Inter, Roboto, "Segoe UI", Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%; margin:0; background:linear-gradient(180deg,#071023 0%, #081227 100%); color:#e6eef6}
+  a{color:var(--accent)}
+  .container{max-width:var(--max-width); margin:18px auto; padding:18px;}
+  /* Login */
+  .login-screen{display:flex;align-items:center;justify-content:center;height:calc(100vh - 36px);}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03); padding:22px; border-radius:12px; box-shadow:0 8px 30px rgba(2,6,23,0.7)}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042028}
+  input,select,textarea,button{font:inherit}
+  .form-row{margin:10px 0}
+  input[type="text"], input[type="password"], select, textarea{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04);
+    background: transparent; color:inherit;
+  }
+  button.btn{
+    background:var(--accent); color:#042028; padding:10px 14px; border-radius:8px; border:0; cursor:pointer;
+  }
+  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06); color:var(--muted); padding:8px 12px;}
+  /* Admin layout */
+  .app{display:grid; grid-template-columns:260px 1fr; gap:18px; min-height:calc(100vh - 36px);}
+  .sidebar{background:var(--card); padding:14px; border-radius:12px; display:flex; flex-direction:column; gap:8px;}
+  .sidebar .user{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px}
+  .nav{margin-top:8px; display:flex;flex-direction:column; gap:6px}
+  .nav button{background:transparent;color:var(--muted);border:0;padding:10px;border-radius:8px;text-align:left;cursor:pointer}
+  .nav button.active{background:linear-gradient(90deg, rgba(45,212,191,0.08), rgba(96,165,250,0.03)); color:var(--accent); font-weight:600}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--glass);border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+  .exit-btn{background:linear-gradient(90deg,#ef4444,#f97316); border:0;color:white;padding:8px 12px;border-radius:8px; cursor:pointer}
+  .main{padding:10px; min-height:600px}
+  .grid{display:grid;gap:12px}
+  .cards{grid-template-columns:repeat(4,1fr)}
+  .card-small{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+  .stat-num{font-size:22px;font-weight:700;color:var(--accent); margin-top:6px}
+  /* Elements area */
+  .elements-area{display:flex; gap:12px; flex-wrap:wrap}
+  .element-palette, .canvas{flex:1; min-width:260px}
+  .palette .item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:8px;cursor:grab}
+  .canvas{min-height:320px;border:2px dashed rgba(255,255,255,0.03);padding:12px;border-radius:8px}
+  .canvas .el{padding:8px;border-radius:6px;margin:6px 0;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center}
+  .publish-bar{display:flex;gap:8px;align-items:center;margin-top:8px}
+  /* Table */
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:left;color:var(--muted)}
+  th{color:#cfeff0}
+  /* Forms */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .small{font-size:13px;color:var(--muted)}
+  /* Popup */
+  .overlay{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;z-index:9999}
+  .modal{background:#071226;padding:18px;border-radius:10px;max-width:400px;width:92%;border:1px solid rgba(255,255,255,0.04)}
+  .modal h3{margin:0 0 8px 0}
+  .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  /* Responsive */
+  @media (max-width:1100px){ .cards{grid-template-columns:repeat(2,1fr)} .app{grid-template-columns:220px 1fr} }
+  @media (max-width:800px){ .app{grid-template-columns:1fr} .sidebar{order:2} .topbar{order:1} .cards{grid-template-columns:1fr} .brand{justify-content:center} .login-screen{padding:10px} }
+  /* Extra-large (TV) */
+  @media (min-width:1600px){ :root{--max-width:1600px} .card-small{padding:22px} .stat-num{font-size:26px} }
+  /* Utilities */
+  .muted{color:var(--muted)} .flex{display:flex;gap:8px;align-items:center}
+  .right{margin-left:auto}
+  .danger{background:var(--danger);color:white;border-radius:8px;padding:6px 8px;border:0;cursor:pointer}
+  .success{background:var(--success);color:#042028;padding:6px 8px;border-radius:8px;border:0}
+  .small-btn{padding:6px 8px;border-radius:6px;border:0;cursor:pointer}
+  .kbd{background:rgba(255,255,255,0.03);padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);font-family:monospace}
+  .hidden{display:none}
+</style>
 </head>
 <body>
-<div class="form-container">
-    <h2>Պատվերի Ֆորմա</h2>
-    <form id="orderForm" class="easyui-form" method="post" data-options="novalidate:true">
-        <div class="fitem">
-            <label>Անուն:</label>
-            <input class="easyui-textbox" name="name" style="width:100%" required>
-        </div>
-        <div class="fitem">
-            <label>Հեռախոս (+374):</label>
-            <input class="easyui-textbox" id="phone" name="phone" style="width:100%" required 
-                   data-options="prompt:'Մուտքագրեք 8 նիշ',validType:'phoneCheck'">
-        </div>
-        <div class="fitem">
-            <label>Հասցե:</label>
-            <input class="easyui-textbox" name="address" style="width:100%" required>
-        </div>
-        <div class="fitem">
-            <label>Կառույց:</label>
-            <select id="buildingType" class="easyui-combobox" name="buildingType" style="width:100%">
-                <option value="house">Տուն</option>
-                <option value="apartment">Բնակարան</option>
-            </select>
-        </div>
 
-        <div id="houseFields" style="display:none;">
-            <div class="fitem">
-                <label>Տան համար:</label>
-                <input class="easyui-numberbox" name="houseNumber" style="width:100%">
+<div class="container" id="root">
+  <!-- LOGIN -->
+  <div id="loginView" class="login-screen">
+    <div class="card" style="width:420px">
+      <div class="brand">
+        <div class="logo">ADM</div>
+        <div>
+          <div style="font-weight:700">Admin Control</div>
+          <div class="small muted">Մուտք գործեք ադմին պանել — օգտագործեք admin / root123456!!!</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="small muted">Մուտքանուն</label>
+        <input id="username" type="text" placeholder="Username" value="">
+      </div>
+      <div class="form-row">
+        <label class="small muted">Գաղտնաբառ</label>
+        <input id="password" type="password" placeholder="Password" value="">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button id="loginBtn" class="btn">Մուտք</button>
+      </div>
+      <div class="small muted" style="margin-top:12px">Մուտքագրումը սիմուլացված է (admin / root123456!!!)</div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="appView" class="app hidden" aria-hidden="true">
+    <aside class="sidebar">
+      <div class="user">
+        <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(90deg,#60a5fa,#2dd4bf);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042028">A</div>
+        <div>
+          <div style="font-weight:700">Administrator</div>
+          <div class="small muted" id="currentUser">admin</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav">
+        <button class="active" data-view="dashboard">Dashboard</button>
+        <button data-view="elements">Elements</button>
+        <button data-view="apis">API's</button>
+        <button data-view="integrations">Integrations</button>
+        <button data-view="settings">Settings</button>
+      </nav>
+      <div style="margin-top:auto;display:flex;gap:8px;align-items:center">
+        <div class="small muted">All Storage:</div>
+        <div style="font-weight:700" id="storageText">8 TB</div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="flex">
+          <div style="font-weight:700">Admin Panel</div>
+          <div class="small muted" style="margin-left:12px" id="serverTime"></div>
+        </div>
+        <div class="flex">
+          <div class="small muted">Save: <span id="saveState">Idle</span></div>
+          <button id="exitBtn" class="exit-btn" title="Exit">Exit</button>
+        </div>
+      </div>
+
+      <div class="main card" id="mainCard" style="margin-top:12px">
+        <!-- Views -->
+        <section id="dashboard" class="view">
+          <h2>Dashboard</h2>
+          <div class="grid cards" id="statsGrid" style="margin-top:12px">
+            <div class="card-small">
+              <div class="small muted">Ընդհանուր API-ներ</div>
+              <div class="stat-num" id="totalApis">0</div>
             </div>
-        </div>
+            <div class="card-small">
+              <div class="small muted">Ակտիվ API-ներ</div>
+              <div class="stat-num" id="activeApis">0</div>
+            </div>
+            <div class="card-small">
+              <div class="small muted">Պասիվ API-ներ</div>
+              <div class="stat-num" id="passiveApis">0</div>
+            </div>
+            <div class="card-small">
+              <div class="small muted">Ժամկետով API-ներ</div>
+              <div class="stat-num" id="expiredApis">0</div>
+            </div>
+          </div>
 
-        <div id="apartmentFields" style="display:none;">
-            <div class="fitem"><label>Շենքի համար:</label><input class="easyui-numberbox" name="buildingNumber" style="width:100%"></div>
-            <div class="fitem"><label>Մուտքի համար:</label><input class="easyui-numberbox" name="entranceNumber" style="width:100%"></div>
-            <div class="fitem"><label>Դամաֆոնի կոդ:</label><input class="easyui-textbox" name="intercomCode" style="width:100%"></div>
-            <div class="fitem"><label>Հարկ:</label><input class="easyui-numberbox" name="floor" style="width:100%"></div>
-            <div class="fitem"><label>Բնակարանի համար:</label><input class="easyui-numberbox" name="apartmentNumber" style="width:100%"></div>
-        </div>
+          <div style="margin-top:18px">
+            <h3>Quick Actions</h3>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+              <button id="addRandomApi" class="small-btn success">Add random API</button>
+              <button id="clearLogs" class="small-btn ghost">Clear error logs</button>
+              <button id="exportBackup" class="small-btn ghost">Export Backup (JSON)</button>
+              <label class="small-btn ghost" style="cursor:pointer">
+                Import Backup <input id="importBackup" type="file" accept="application/json" style="display:none">
+              </label>
+            </div>
+          </div>
 
-        <div class="fitem">
-            <label>Ծառայության տեսակ:</label>
-            <select id="serviceType" class="easyui-combobox" name="serviceType" style="width:100%">
-                <option value="1000">Ծառայություն 1 - 1000֏</option>
-                <option value="2000">Ծառայություն 2 - 2000֏</option>
-                <option value="3000">Ծառայություն 3 - 3000֏</option>
-            </select>
-        </div>
+        </section>
 
-        <div class="fitem">
-            <label>ՔՄ:</label>
-            <input class="easyui-numberbox" id="sqm" name="sqm" style="width:100%">
-        </div>
-        <div class="price-display" id="totalPrice">Գին: 0֏</div>
+        <section id="elements" class="view hidden">
+          <h2>Elements</h2>
+          <div class="elements-area">
+            <div class="element-palette card-small palette">
+              <div style="font-weight:700;margin-bottom:8px">Palette (drag)</div>
+              <div class="item" draggable="true" data-type="text">Text Block</div>
+              <div class="item" draggable="true" data-type="button">Button</div>
+              <div class="item" draggable="true" data-type="image">Image Placeholder</div>
+              <div class="item" draggable="true" data-type="card">Info Card</div>
+              <div class="small muted">Drag items into the canvas then Publish to apply to User page.</div>
+            </div>
 
-        <div style="margin-top:15px;">
-            <a href="javascript:void(0)" id="saveTemplate" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:48%">Պահպանել շաբլոնը</a>
-            <a href="javascript:void(0)" id="submitForm" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width:48%">Ուղարկել</a>
-        </div>
-    </form>
+            <div class="canvas card-small" id="canvas" >
+              <div class="small muted">Drop elements here</div>
+            </div>
+          </div>
+          <div class="publish-bar">
+            <input id="pageTitle" placeholder="User page title" style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);flex:1">
+            <button id="publishBtn" class="btn">Publish to User Page</button>
+            <button id="clearCanvas" class="ghost">Clear</button>
+          </div>
+        </section>
+
+        <section id="apis" class="view hidden">
+          <h2>API's</h2>
+          <div style="margin-top:12px">
+            <table>
+              <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Expires</th><th></th></tr></thead>
+              <tbody id="apisTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="integrations" class="view hidden">
+          <h2>Integrations</h2>
+          <div style="margin-top:12px">
+            <div class="two-col">
+              <input id="integrationName" placeholder="Integration name">
+              <select id="integrationType"><option>Webhook</option><option>OAuth</option><option>API Key</option></select>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button id="addIntegration" class="btn">Add Integration</button>
+              <button id="listIntegrations" class="ghost">Refresh</button>
+            </div>
+
+            <div style="margin-top:12px">
+              <table>
+                <thead><tr><th>Name</th><th>Type</th><th>Active</th><th></th></tr></thead>
+                <tbody id="integrationsTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="settings" class="view hidden">
+          <h2>Settings</h2>
+          <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="card-small">
+              <h4>Security</h4>
+              <div class="small muted">Create users and roles</div>
+              <div style="margin-top:8px">
+                <input id="newUser" placeholder="Username" style="margin-bottom:8px">
+                <input id="newPass" placeholder="Password" style="margin-bottom:8px">
+                <select id="newRole"><option>admin</option><option>editor</option><option>viewer</option></select>
+                <div style="margin-top:8px;display:flex;gap:8px">
+                  <button id="createUser" class="btn">Create User</button>
+                  <button id="listUsers" class="ghost">List Users</button>
+                </div>
+                <div style="margin-top:8px">
+                  <table><thead><tr><th>Username</th><th>Role</th><th></th></tr></thead><tbody id="usersTable"></tbody></table>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-small">
+              <h4>Backups</h4>
+              <div class="small muted">Export / Import full site backup (JSON)</div>
+              <div style="margin-top:8px;display:flex;gap:8px">
+                <button id="exportBtn" class="btn">Export</button>
+                <label class="ghost" style="cursor:pointer">Import <input id="importFile" type="file" accept="application/json" style="display:none"></label>
+              </div>
+            </div>
+
+            <div class="card-small">
+              <h4>System</h4>
+              <div class="small muted">Site info and error logs</div>
+              <div style="margin-top:8px">
+                <div><strong>App:</strong> Demo Admin Panel</div>
+                <div><strong>Version:</strong> 1.0.0</div>
+                <div><strong>Errors:</strong> <span id="errorCount">0</span></div>
+                <div style="margin-top:8px">
+                  <button id="showErrors" class="ghost">Show Errors</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-small">
+              <h4>Storage</h4>
+              <div class="small muted">All Storage: 8 TB — Local simulated</div>
+              <div style="margin-top:8px">
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div style="width:120px;height:10px;background:rgba(255,255,255,0.03);border-radius:6px;overflow:hidden">
+                    <div id="storageBar" style="height:10px;width:0%;background:linear-gradient(90deg,var(--accent),#60a5fa)"></div>
+                  </div>
+                  <div class="small muted" id="storageUsed">Used: 0 GB</div>
+                </div>
+                <div style="margin-top:8px">
+                  <button id="resetStorage" class="ghost">Reset Storage</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- User page preview -->
+        <section id="userPage" class="view hidden" style="margin-top:18px">
+          <h2>User Page Preview</h2>
+          <div id="userPreview" class="card-small" style="min-height:160px"></div>
+        </section>
+
+      </div>
+    </main>
+  </div>
 </div>
 
+<!-- MODAL TEMPLATES -->
+<div id="modalRoot"></div>
+
 <script>
-    $.extend($.fn.validatebox.defaults.rules, {
-        phoneCheck: {
-            validator: function(value){
-                return /^\d{8}$/.test(value);
-            },
-            message: 'Մուտքագրեք ճիշտ հեռախոսահամար (8 նիշ):'
-        }
-    });
+/* -----------------------
+   Simple Admin Panel JS
+   ----------------------- */
 
-    $('#buildingType').combobox({
-        onChange: function(value){
-            if(value === 'house'){
-                $('#houseFields').show();
-                $('#apartmentFields').hide();
-            } else {
-                $('#houseFields').hide();
-                $('#apartmentFields').show();
-            }
-        }
-    });
+const initialState = {
+  users: [{username:'admin', password:'root123456!!!', role:'admin'}],
+  apis: [], // {id,title,type,status,expires, sizeGB}
+  integrations: [],
+  elements: {pageTitle:'', items:[]}, // items: [{type,id,content}]
+  errors: []
+};
 
-    function updatePrice(){
-        let sqm = parseFloat($('#sqm').numberbox('getValue')) || 0;
-        let pricePerSqm = parseFloat($('#serviceType').combobox('getValue')) || 0;
-        $('#totalPrice').text('Գին: ' + (sqm * pricePerSqm) + '֏');
+const SAVE_KEY = 'demo_admin_state_v1';
+const SAVE_META = 'demo_admin_meta';
+let state = loadState();
+let autoSaveTimer = null;
+let currentView = 'dashboard';
+let loggedInUser = null;
+
+/* ---------- Init ---------- */
+document.addEventListener('DOMContentLoaded',()=>{
+  initLogin();
+  initNav();
+  initDashboard();
+  initElements();
+  initAPIs();
+  initIntegrations();
+  initSettings();
+  initUserPage();
+  startRealtimeSimulator();
+  updateServerTime();
+  setInterval(updateServerTime,1000);
+});
+
+/* ---------- Storage & Autosave ---------- */
+function loadState(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){console.error(e)}
+  // clone initial
+  return JSON.parse(JSON.stringify(initialState));
+}
+function saveState(){
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  document.getElementById('saveState').innerText = 'Saved ' + new Date().toLocaleTimeString();
+  setTimeout(()=>{ document.getElementById('saveState').innerText='Idle' },1200);
+}
+function scheduleAutoSave(){
+  document.getElementById('saveState').innerText = 'Saving...';
+  if(autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(()=>{ saveState() }, 600);
+}
+
+/* ---------- Login ---------- */
+function initLogin(){
+  const loginBtn = document.getElementById('loginBtn');
+  loginBtn.addEventListener('click', doLogin);
+  document.getElementById('username').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin() });
+  document.getElementById('password').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin() });
+
+  // Pre-populate if admin exists
+  const admin = state.users.find(u=>u.username==='admin');
+  if(admin){
+    document.getElementById('username').value='admin';
+  }
+}
+function doLogin(){
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  const found = state.users.find(x=>x.username===u && x.password===p);
+  if(found){
+    loggedInUser = found.username;
+    document.getElementById('currentUser').innerText = loggedInUser;
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('appView').classList.remove('hidden');
+    document.getElementById('appView').removeAttribute('aria-hidden');
+    // show exit btn
+    document.getElementById('exitBtn').addEventListener('click', askExit);
+    scheduleAutoSave();
+    renderAll();
+  } else {
+    alert('Մուտքը մերժվեց։ Սխալ մուտքանուն կամ գաղտնաբառ։');
+  }
+}
+
+/* ---------- Navigation ---------- */
+function initNav(){
+  document.querySelectorAll('#nav button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#nav button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      showView(btn.dataset.view);
+    });
+  });
+}
+function showView(name){
+  currentView = name;
+  document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+  const el = document.getElementById(name);
+  if(el) el.classList.remove('hidden');
+  if(name === 'elements') { document.getElementById('userPage').classList.remove('hidden'); } else { document.getElementById('userPage').classList.add('hidden') }
+  scheduleAutoSave();
+}
+
+/* ---------- Dashboard ---------- */
+function initDashboard(){
+  document.getElementById('addRandomApi').addEventListener('click', addRandomApi);
+  document.getElementById('clearLogs').addEventListener('click', ()=>{ if(confirm('Ցանկանում եք մաքրել error logs-ը?')){ state.errors = []; scheduleAutoSave(); updateErrorCount(); }});
+  document.getElementById('exportBackup').addEventListener('click', exportBackup);
+  document.getElementById('importBackup').addEventListener('change', importBackupFromInput);
+  updateStatsGrid();
+  updateErrorCount();
+}
+function updateStatsGrid(){
+  const total = state.apis.length;
+  const active = state.apis.filter(a=>a.status==='active').length;
+  const passive = state.apis.filter(a=>a.status==='passive').length;
+  const expired = state.apis.filter(a=>a.status==='expired').length;
+  document.getElementById('totalApis').innerText = total;
+  document.getElementById('activeApis').innerText = active;
+  document.getElementById('passiveApis').innerText = passive;
+  document.getElementById('expiredApis').innerText = expired;
+}
+
+/* ---------- APIs ---------- */
+function initAPIs(){
+  renderAPIs();
+}
+function renderAPIs(){
+  const tbody = document.getElementById('apisTable');
+  tbody.innerHTML = '';
+  state.apis.forEach(api=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${api.title}</td><td>${api.type}</td><td>${api.status}</td><td>${api.expires || '-'}</td><td><button class="ghost" data-id="${api.id}">Delete</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('button').addEventListener('click', (e)=>{
+      confirmDelete(()=>{ state.apis = state.apis.filter(a=>a.id!==api.id); scheduleAutoSave(); renderAPIs(); updateStatsGrid(); updateStorage(); });
+    });
+  });
+}
+
+/* ---------- Integrations ---------- */
+function initIntegrations(){
+  document.getElementById('addIntegration').addEventListener('click', ()=>{
+    const name = document.getElementById('integrationName').value.trim();
+    const type = document.getElementById('integrationType').value;
+    if(!name){ alert('Անվանումը պարտադիր է'); return; }
+    state.integrations.push({id:uid(), name, type, active:true});
+    document.getElementById('integrationName').value='';
+    scheduleAutoSave();
+    renderIntegrations();
+  });
+  document.getElementById('listIntegrations').addEventListener('click', renderIntegrations);
+  renderIntegrations();
+}
+function renderIntegrations(){
+  const tbody = document.getElementById('integrationsTable'); tbody.innerHTML='';
+  state.integrations.forEach(i=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i.name}</td><td>${i.type}</td><td>${i.active? 'Yes':'No'}</td><td><button class="ghost" data-id="${i.id}">${i.active? 'Deactivate':'Activate'}</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('button').addEventListener('click', ()=>{
+      i.active = !i.active; scheduleAutoSave(); renderIntegrations();
+    });
+  });
+}
+
+/* ---------- Elements (Drag & Drop) ---------- */
+function initElements(){
+  const paletteItems = document.querySelectorAll('.palette .item');
+  paletteItems.forEach(it=>{
+    it.addEventListener('dragstart', (e)=>{
+      e.dataTransfer.setData('text/plain', it.dataset.type);
+    });
+  });
+
+  const canvas = document.getElementById('canvas');
+  canvas.addEventListener('dragover', (e)=>{ e.preventDefault(); canvas.style.borderColor = 'rgba(45,212,191,0.3)'; });
+  canvas.addEventListener('dragleave', ()=>{ canvas.style.borderColor='' });
+  canvas.addEventListener('drop', (e)=>{
+    e.preventDefault(); canvas.style.borderColor='';
+    const type = e.dataTransfer.getData('text/plain');
+    addElementToCanvas(type);
+  });
+
+  document.getElementById('publishBtn').addEventListener('click', publishUserPage);
+  document.getElementById('clearCanvas').addEventListener('click', ()=>{ confirmDelete(()=>{ state.elements.items=[]; renderCanvas(); scheduleAutoSave(); updateStorage(); }) });
+  renderCanvas();
+}
+function addElementToCanvas(type){
+  const id = uid();
+  let content = '';
+  if(type==='text') content = 'Sample text block';
+  if(type==='button') content = 'Click me';
+  if(type==='image') content = 'Image placeholder';
+  if(type==='card') content = 'Info card';
+  state.elements.items.push({id,type,content});
+  renderCanvas();
+  scheduleAutoSave();
+  updateStorage();
+}
+function renderCanvas(){
+  const canvas = document.getElementById('canvas');
+  canvas.innerHTML = '';
+  if(state.elements.items.length===0){
+    canvas.innerHTML = '<div class="small muted">Drop elements here</div>';
+    return;
+  }
+  state.elements.items.forEach(it=>{
+    const div = document.createElement('div'); div.className='el';
+    div.innerHTML = `<div style="flex:1"><strong>${it.type}</strong><div class="small muted">${it.content}</div></div><div><button class="ghost edit" data-id="${it.id}">Edit</button> <button class="danger del" data-id="${it.id}">Delete</button></div>`;
+    canvas.appendChild(div);
+    div.querySelector('.del').addEventListener('click', ()=>{ confirmDelete(()=>{ state.elements.items = state.elements.items.filter(x=>x.id!==it.id); renderCanvas(); scheduleAutoSave(); updateStorage(); }) });
+    div.querySelector('.edit').addEventListener('click', ()=>{
+      const newC = prompt('Edit content', it.content);
+      if(newC!==null){ it.content = newC; renderCanvas(); scheduleAutoSave(); updateStorage(); }
+    });
+  });
+}
+
+/* ---------- Publish / User Page ---------- */
+function publishUserPage(){
+  const title = document.getElementById('pageTitle').value.trim() || 'User Page';
+  state.elements.pageTitle = title;
+  // When publishing, make these visible on user preview section
+  renderUserPreview();
+  document.getElementById('userPage').classList.remove('hidden');
+  scheduleAutoSave();
+  alert('Published to User Page (preview).');
+}
+function initUserPage(){
+  renderUserPreview();
+}
+function renderUserPreview(){
+  const root = document.getElementById('userPreview');
+  root.innerHTML = `<h3 style="margin-top:0">${escapeHtml(state.elements.pageTitle || 'User Page')}</h3>`;
+  state.elements.items.forEach(it=>{
+    if(it.type==='text'){
+      const d = document.createElement('div'); d.style.margin='6px 0'; d.innerText = it.content; root.appendChild(d);
+    } else if(it.type==='button'){
+      const b = document.createElement('button'); b.className='btn'; b.style.margin='6px 0'; b.innerText = it.content; root.appendChild(b);
+    } else if(it.type==='image'){
+      const p = document.createElement('div'); p.style.width='100%'; p.style.height='120px'; p.style.background='rgba(255,255,255,0.02)'; p.style.display='flex'; p.style.alignItems='center'; p.style.justifyContent='center'; p.style.borderRadius='8px'; p.innerText = it.content; root.appendChild(p);
+    } else if(it.type==='card'){
+      const c = document.createElement('div'); c.style.padding='10px'; c.style.margin='6px 0'; c.style.border='1px solid rgba(255,255,255,0.03)'; c.style.borderRadius='8px'; c.innerHTML = `<strong>${it.content}</strong><div class="small muted">Card detail</div>`; root.appendChild(c);
     }
-    $('#sqm, #serviceType').on('change', updatePrice);
+  });
+}
 
-    $('#saveTemplate').click(function(){
-        let formData = $('#orderForm').serializeArray();
-        localStorage.setItem('orderTemplate', JSON.stringify(formData));
-        $.messager.alert('Պահպանված է', 'Շաբլոնը հաջողությամբ պահպանվեց');
-    });
+/* ---------- Users (Settings) ---------- */
+function initSettings(){
+  document.getElementById('createUser').addEventListener('click', ()=>{
+    const u = document.getElementById('newUser').value.trim();
+    const p = document.getElementById('newPass').value;
+    const r = document.getElementById('newRole').value;
+    if(!u||!p){ alert('Username and password required'); return; }
+    if(state.users.some(x=>x.username===u)){ alert('User exists'); return; }
+    state.users.push({username:u,password:p,role:r});
+    document.getElementById('newUser').value=''; document.getElementById('newPass').value='';
+    scheduleAutoSave(); renderUsers();
+  });
+  document.getElementById('listUsers').addEventListener('click', renderUsers);
+  document.getElementById('exportBtn').addEventListener('click', exportBackup);
+  document.getElementById('importFile').addEventListener('change', importBackupFromInput);
+  document.getElementById('showErrors').addEventListener('click', showErrors);
+  document.getElementById('resetStorage').addEventListener('click', ()=>{ if(confirm('Reset storage and remove all user-created data?')){ state = JSON.parse(JSON.stringify(initialState)); saveState(); location.reload(); }});
+  renderUsers();
+}
+function renderUsers(){
+  const tbody = document.getElementById('usersTable'); tbody.innerHTML='';
+  state.users.forEach(u=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${u.username}</td><td>${u.role}</td><td><button class="ghost" data-u="${u.username}">Delete</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('button').addEventListener('click', ()=>{ confirmDelete(()=>{ state.users = state.users.filter(x=>x.username!==u.username); scheduleAutoSave(); renderUsers(); }) });
+  });
+}
 
-    $(document).ready(function(){
-        let savedData = localStorage.getItem('orderTemplate');
-        if(savedData){
-            savedData = JSON.parse(savedData);
-            savedData.forEach(item => {
-                $('[name="'+item.name+'"]').val(item.value);
-            });
-            updatePrice();
-        }
-    });
+/* ---------- Backups ---------- */
+function exportBackup(){
+  const dataStr = JSON.stringify(state,null,2);
+  const blob = new Blob([dataStr],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download = 'admin-backup.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+function importBackupFromInput(e){
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=> {
+    try{
+      const obj = JSON.parse(reader.result);
+      if(confirm('Ցանկանում եք ներմուծել պահուստը և փոխարինել տեղական տվյալները?')){
+        state = obj;
+        saveState();
+        location.reload();
+      }
+    }catch(err){ alert('Վավեր JSON չէ'); }
+  };
+  reader.readAsText(f);
+}
 
-    $('#submitForm').click(function(){
-        if($('#orderForm').form('validate')){
-            let formData = $('#orderForm').serializeArray();
-            
-            // Google Sheets API Integration
-            fetch("YOUR_GOOGLE_SCRIPT_WEB_APP_URL", {
-                method: "POST",
-                body: JSON.stringify(formData),
-                headers: { "Content-Type": "application/json" }
-            }).then(res => {
-                $.messager.alert('Հաջողություն', 'Շնորհակալություն, Ձեր պատվերը հաջողությամբ գրանցվեց');
-                setTimeout(()=> location.reload(), 3000);
-            });
-        }
-    });
+/* ---------- System / Errors ---------- */
+function addError(msg){
+  state.errors.push({id:uid(), time:new Date().toISOString(), msg});
+  scheduleAutoSave(); updateErrorCount();
+}
+function updateErrorCount(){
+  document.getElementById('errorCount').innerText = state.errors.length;
+}
+
+/* ---------- Storage Simulation ---------- */
+const TOTAL_TB = 8;
+function updateStorage(){
+  // Compute used GB from APIs + elements approximate sizes
+  let usedGB = 0;
+  state.apis.forEach(a=> usedGB += (a.sizeGB || 0.02));
+  usedGB += state.elements.items.length * 0.02; // each element 20MB ~ 0.02GB
+  usedGB = Math.round(usedGB*100)/100;
+  const usedPct = Math.min(100, Math.round((usedGB/(TOTAL_TB*1024))*10000)/100); // convert TB to GB
+  document.getElementById('storageUsed').innerText = `Used: ${usedGB} GB`;
+  document.getElementById('storageBar').style.width = (usedPct)+'%';
+}
+
+/* ---------- Realtime Simulator (simulate counts updating) ---------- */
+function startRealtimeSimulator(){
+  // If no data, seed few apis
+  if(state.apis.length===0){
+    for(let i=0;i<3;i++){
+      state.apis.push({id:uid(), title:'API '+(i+1), type: i%2?'REST':'GraphQL', status: i%2?'active':'passive', expires: i===2? new Date(Date.now()+86400*1000).toISOString().slice(0,10): null, sizeGB: Math.round(Math.random()*20)/100});
+    }
+    scheduleAutoSave();
+  }
+  // update randomly every 1.2s
+  setInterval(()=>{
+    // randomly flip status or add small count
+    if(Math.random() < 0.25){
+      // add or remove api
+      if(Math.random()<0.6){
+        state.apis.push({id:uid(), title:'API '+(state.apis.length+1), type: (Math.random()<0.5?'REST':'GraphQL'), status: (Math.random()<0.6?'active':'passive'), expires: (Math.random()<0.2? new Date(Date.now()+ (Math.random()*10|0)*86400*1000 : null)), sizeGB: Math.round(Math.random()*50)/100});
+      } else {
+        state.apis.splice(Math.floor(Math.random()*state.apis.length),1);
+      }
+    } else {
+      // flip status of random api
+      if(state.apis.length){
+        const idx = Math.floor(Math.random()*state.apis.length);
+        const api = state.apis[idx];
+        api.status = (Math.random()<0.7?'active':'passive');
+        if(Math.random()<0.05) api.status='expired';
+      }
+    }
+    // occasionally add an error
+    if(Math.random()<0.02) addError('Random simulated error at ' + new Date().toLocaleTimeString());
+    renderAPIs();
+    updateStatsGrid();
+    updateErrorCount();
+    updateStorage();
+    scheduleAutoSave();
+  }, 1200);
+}
+
+/* ---------- Utilities ---------- */
+function uid(){ return 'id_'+Math.random().toString(36).slice(2,9); }
+function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ---------- Random API add ---------- */
+function addRandomApi(){
+  const a = {id:uid(), title:'API '+(state.apis.length+1), type: (Math.random()<0.5?'REST':'GraphQL'), status: (Math.random()<0.7?'active':'passive'), expires: (Math.random()<0.2? new Date(Date.now()+ (Math.random()*10|0)*86400*1000 : null)), sizeGB: Math.round(Math.random()*50)/100};
+  state.apis.push(a); scheduleAutoSave(); renderAPIs(); updateStatsGrid(); updateStorage();
+}
+
+/* ---------- Delete confirmation modal ---------- */
+function confirmDelete(action){
+  const modalRoot = document.getElementById('modalRoot');
+  const overlay = document.createElement('div'); overlay.className='overlay';
+  const modal = document.createElement('div'); modal.className='modal';
+  modal.innerHTML = `<h3>Վստահ եք, որ ցանկանում եք ջնջել?</h3><div class="small muted">Այս գործողությունը հնարավոր է չվերականգնել:</div>`;
+  const actions = document.createElement('div'); actions.className='actions';
+  const cancel = document.createElement('button'); cancel.className='ghost'; cancel.innerText='Չեղարկել';
+  const del = document.createElement('button'); del.className='danger'; del.innerText='Ջնջել';
+  actions.appendChild(cancel); actions.appendChild(del);
+  modal.appendChild(actions); overlay.appendChild(modal); modalRoot.appendChild(overlay);
+  cancel.addEventListener('click', ()=>{ overlay.remove(); });
+  del.addEventListener('click', ()=>{ overlay.remove(); action(); });
+}
+
+/* ---------- Exit confirmation ---------- */
+function askExit(){
+  const modalRoot = document.getElementById('modalRoot');
+  const overlay = document.createElement('div'); overlay.className='overlay';
+  const modal = document.createElement('div'); modal.className='modal';
+  modal.innerHTML = `<h3>Վստահ եք, որ ցանկանում եք դուրս գալ?</h3><div class="small muted">Դուք կհեռացվեք ադմին էջից:</div>`;
+  const actions = document.createElement('div'); actions.className='actions';
+  const cancel = document.createElement('button'); cancel.className='ghost'; cancel.innerText='Չեղարկել';
+  const out = document.createElement('button'); out.className='danger'; out.innerText='Ելք';
+  actions.appendChild(cancel); actions.appendChild(out);
+  modal.appendChild(actions); overlay.appendChild(modal); modalRoot.appendChild(overlay);
+  cancel.addEventListener('click', ()=>{ overlay.remove(); });
+  out.addEventListener('click', ()=>{
+    overlay.remove();
+    // logout: hide app, show login, and remove exit button (per requirement)
+    document.getElementById('appView').classList.add('hidden');
+    document.getElementById('loginView').classList.remove('hidden');
+    document.getElementById('exitBtn').classList.add('hidden');
+    loggedInUser = null;
+    scheduleAutoSave();
+  });
+}
+
+/* ---------- Errors viewer ---------- */
+function showErrors(){
+  const modalRoot = document.getElementById('modalRoot');
+  const overlay = document.createElement('div'); overlay.className='overlay';
+  const modal = document.createElement('div'); modal.className='modal';
+  modal.innerHTML = `<h3>Error Logs (${state.errors.length})</h3><div style="max-height:300px;overflow:auto;margin-top:8px">${state.errors.map(e=>`<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.02)"><div class="small muted">${e.time}</div><div>${escapeHtml(e.msg)}</div></div>`).join('')}</div>`;
+  const actions = document.createElement('div'); actions.className='actions';
+  const close = document.createElement('button'); close.className='ghost'; close.innerText='Close';
+  const clear = document.createElement('button'); clear.className='danger'; clear.innerText='Clear';
+  actions.appendChild(close); actions.appendChild(clear);
+  modal.appendChild(actions); overlay.appendChild(modal); modalRoot.appendChild(overlay);
+  close.addEventListener('click', ()=> overlay.remove() );
+  clear.addEventListener('click', ()=>{ if(confirm('Արդյոք իսկապես մաքրե՞լ էլեմենտները')){ state.errors=[]; scheduleAutoSave(); overlay.remove(); updateErrorCount(); } });
+}
+
+/* ---------- Render helpers ---------- */
+function renderAll(){
+  renderAPIs(); renderIntegrations(); renderUsers(); renderCanvas(); renderUserPreview(); updateStatsGrid(); updateErrorCount(); updateStorage();
+}
+
+/* ---------- Small helpers ---------- */
+function updateServerTime(){
+  document.getElementById('serverTime').innerText = new Date().toLocaleString();
+}
+
+/* ---------- Init render ---------- */
+renderAll();
+
 </script>
 </body>
 </html>
+
