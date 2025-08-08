@@ -1,982 +1,165 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="hy">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>EasyUI Responsive Admin / Manager / User App</title>
-
-  <!-- jQuery + EasyUI CSS/JS (CDNs) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-easyui/1.12.1/themes/default/easyui.css"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-easyui/1.12.1/themes/icon.css"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easyui/1.12.1/jquery.easyui.min.js"></script>
-
-  <!-- MD5 - blueimp-md5 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
-
-  <style>
-    /* Basic layout and responsiveness */
-    html, body {
-      height:100%;
-      margin:0;
-      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-    }
-    /* Container */
-    .app-shell {
-      display:flex;
-      flex-direction:column;
-      min-height:100vh;
-    }
-    /* Header with Exit */
-    .app-header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:10px 16px;
-      border-bottom:1px solid #e8e8e8;
-      background:#f6f6f6;
-    }
-    .app-title{font-size:18px;font-weight:600;}
-    .exit-btn{
-      margin-left:auto;
-    }
-
-    /* Main content area */
-    .app-main{
-      flex:1;
-      padding:12px;
-      box-sizing:border-box;
-    }
-
-    /* Flex for toolbar buttons evenly spaced */
-    .tool-row {
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between; /* main alignment for big containers */
-    }
-    .tool-left {
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex:1 1 auto;
-    }
-    .tool-right {
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:flex-end;
-      flex:0 0 auto;
-    }
-    .cta {
-      padding:8px 12px;
-      border-radius:4px;
-      background:#1976d2;
-      color:#fff;
-      border:0;
-      cursor:pointer;
-      font-size:14px;
-    }
-    .cta.secondary {
-      background:#4caf50;
-    }
-    .cta.danger { background:#d32f2f; }
-    .cta.ghost { background:#f5f5f5; color:#333; border:1px solid #ddd; }
-
-    /* Responsiveness tuning for small screens */
-    @media (max-width: 640px) {
-      .tool-row { flex-direction:column; align-items:stretch; gap:10px; }
-      .tool-right { justify-content:space-between; width:100%; }
-    }
-
-    /* Small UI tweaks for datagrid toolbar spacing */
-    .dg-toolbar {
-      padding:8px;
-    }
-
-    /* Dialog content form widths */
-    .dlg-form .fitem { margin-bottom:10px; display:flex; gap:8px; align-items:center;}
-    .dlg-form .fitem label { width:120px; font-weight:600; }
-    .dlg-form .fitem input, .dlg-form .fitem select, .dlg-form .fitem textarea {
-      flex:1;
-      padding:6px 8px;
-      box-sizing:border-box;
-    }
-
-    /* Compact footers */
-    .footer { padding:8px 16px; border-top:1px solid #eee; text-align:center; font-size:12px; color:#666;}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyUI Պատվերի Ֆորմա</title>
+    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="https://www.jeasyui.com/easyui/themes/icon.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://www.jeasyui.com/easyui/jquery.easyui.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 15px;
+            background: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+        .form-container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .price-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2196F3;
+            margin-top: 10px;
+        }
+        @media screen and (max-width: 600px) {
+            .fitem label {
+                display: block;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="app-shell">
-
-  <!-- LOGIN PAGE -->
-  <div id="loginPage" style="padding:20px; max-width:420px; margin:30px auto;">
-    <h2>Application Login</h2>
-    <div style="margin-bottom:12px;">
-      <input id="loginUsername" class="easyui-textbox" style="width:100%;" data-options="label:'Login:',labelPosition:'top'"/>
-    </div>
-    <div style="margin-bottom:12px;">
-      <input id="loginPassword" type="password" class="easyui-textbox" style="width:100%;" data-options="label:'Password:',labelPosition:'top'"/>
-    </div>
-    <div style="display:flex;gap:8px;">
-      <a href="#" id="btnLogin" class="cta">Login</a>
-      <a href="#" id="btnClear" class="cta ghost">Clear</a>
-    </div>
-    <div style="margin-top:12px;color:#555;font-size:13px">
-      <b>Note:</b> This demo stores credentials as MD5 hashes in client-side storage. For production, use server-side authentication.
-    </div>
-  </div>
-
-  <!-- APP MAIN (hidden until login) -->
-  <div id="appMain" style="display:none; min-height:80vh;">
-    <div class="app-header">
-      <div class="app-title">EasyUI Responsive Admin System</div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div id="currentUser" style="color:#333;font-weight:600;"></div>
-        <button id="btnExit" class="cta ghost">Exit</button>
-      </div>
-    </div>
-
-    <div class="app-main">
-      <!-- Navigation Tabs -->
-      <div id="navTabs" class="easyui-tabs" data-options="fit:true,border:false" style="min-height:60vh">
-        <!-- Admin tab -->
-        <div title="Admin" id="adminTab" style="padding:10px;">
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div class="tool-row">
-              <div class="tool-left">
-                <input id="adminSearch" class="easyui-textbox" style="width:280px" data-options="prompt:'Search (Customer ID, First/Last name, Card...)'"/>
-                <button class="cta ghost" id="adminFilterBtn">Filter</button>
-                <button class="cta ghost" id="adminRefreshBtn">Refresh</button>
-              </div>
-              <div class="tool-right">
-                <div style="display:flex; gap:8px;">
-                  <button class="cta" id="adminAddBtn">Add</button>
-                  <button class="cta secondary" id="adminEditBtn">Edit</button>
-                  <button class="cta danger" id="adminDeleteBtn">Delete</button>
-                  <div style="display:flex;align-items:center;gap:6px;">
-                    <label>Rows:</label>
-                    <select id="adminPageSize" class="easyui-combobox" style="width:90px;">
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                      <option value="30">30</option>
-                      <option value="40">40</option>
-                      <option value="50">50</option>
-                      <option value="100">100</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <table id="adminGrid" class="easyui-datagrid" style="width:100%" 
-                   data-options="singleSelect:true,rownumbers:true,pagination:true,fitColumns:true">
-              <thead>
-                <tr>
-                  <th data-options="field:'customerId',width:80">Customer ID</th>
-                  <th data-options="field:'firstName',width:120">First Name</th>
-                  <th data-options="field:'lastName',width:120">Last Name</th>
-                  <th data-options="field:'cardNumber',width:120">Card Number</th>
-                  <th data-options="field:'amount',width:80,align:'right'">Amount</th>
-                  <th data-options="field:'bonus',width:60,align:'center'">Bonus</th>
-                  <th data-options="field:'status',width:80,align:'center'">Status</th>
-                  <th data-options="field:'comment',width:200">Comment</th>
-                </tr>
-              </thead>
-            </table>
-
-            <!-- Admin management sections -->
-            <div style="margin-top:12px;">
-              <div class="easyui-accordion" data-options="multiple:false" style="width:100%">
-                <div title="Roles" data-options="iconCls:'icon-tip'">
-                  <div style="padding:8px;">
-                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                      <input id="newRoleName" class="easyui-textbox" style="width:220px" data-options="prompt:'Role name'"/>
-                      <a href="#" id="addRoleBtn" class="cta">Add Role</a>
-                    </div>
-                    <table id="rolesGrid" class="easyui-datagrid" style="width:100%" data-options="singleSelect:true,fitColumns:true">
-                      <thead><tr>
-                        <th data-options="field:'role',width:200">Role</th>
-                        <th data-options="field:'desc',width:400">Description</th>
-                      </tr></thead>
-                    </table>
-                  </div>
-                </div>
-                <div title="Integrations" data-options="iconCls:'icon-add'">
-                  <div style="padding:8px;">
-                    <div class="dlg-form">
-                      <div class="fitem"><label>Integration name</label><input id="integrationName" /></div>
-                      <div class="fitem"><label>API Endpoint</label><input id="integrationEndpoint" /></div>
-                      <div class="fitem"><label>Auth token</label><input id="integrationToken" /></div>
-                      <div style="margin-top:8px;">
-                        <button id="saveIntegration" class="cta">Save Integration</button>
-                        <button id="testIntegration" class="cta ghost">Test (simulate)</button>
-                      </div>
-                      <table id="integrationsGrid" class="easyui-datagrid" style="width:100%;margin-top:8px;" data-options="fitColumns:true,singleSelect:true">
-                        <thead><tr><th data-options="field:'name',width:200">Name</th><th data-options="field:'endpoint',width:400">Endpoint</th></tr></thead>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-                <div title="Database" data-options="iconCls:'icon-save'">
-                  <div style="padding:8px;">
-                    <div class="dlg-form">
-                      <div class="fitem"><label>DB label</label><input id="dbLabel" /></div>
-                      <div class="fitem"><label>API / Connection string</label><input id="dbConn" /></div>
-                      <div style="margin-top:8px;">
-                        <button id="saveDb" class="cta">Save DB</button>
-                        <button id="testDb" class="cta ghost">Test Connection (simulate)</button>
-                      </div>
-                      <table id="dbGrid" class="easyui-datagrid" style="width:100%;margin-top:8px;" data-options="fitColumns:true,singleSelect:true">
-                        <thead><tr><th data-options="field:'label',width:200">Label</th><th data-options="field:'conn',width:400">Connection</th></tr></thead>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-                <div title="Users" data-options="iconCls:'icon-man'">
-                  <div style="padding:8px;">
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                      <input id="newUserLogin" class="easyui-textbox" style="width:180px" data-options="prompt:'Login'"/>
-                      <input id="newUserPassword" type="password" class="easyui-textbox" style="width:180px" data-options="prompt:'Password'"/>
-                      <select id="newUserRole" class="easyui-combobox" style="width:180px;"></select>
-                      <a href="#" id="addUserBtn" class="cta">Add User</a>
-                    </div>
-                    <table id="usersGrid" class="easyui-datagrid" style="width:100%;margin-top:8px;" data-options="fitColumns:true,singleSelect:true">
-                      <thead><tr><th data-options="field:'login',width:180">Login</th><th data-options="field:'role',width:120">Role</th></tr></thead>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
+<div class="form-container">
+    <h2>Պատվերի Ֆորմա</h2>
+    <form id="orderForm" class="easyui-form" method="post" data-options="novalidate:true">
+        <div class="fitem">
+            <label>Անուն:</label>
+            <input class="easyui-textbox" name="name" style="width:100%" required>
+        </div>
+        <div class="fitem">
+            <label>Հեռախոս (+374):</label>
+            <input class="easyui-textbox" id="phone" name="phone" style="width:100%" required 
+                   data-options="prompt:'Մուտքագրեք 8 նիշ',validType:'phoneCheck'">
+        </div>
+        <div class="fitem">
+            <label>Հասցե:</label>
+            <input class="easyui-textbox" name="address" style="width:100%" required>
+        </div>
+        <div class="fitem">
+            <label>Կառույց:</label>
+            <select id="buildingType" class="easyui-combobox" name="buildingType" style="width:100%">
+                <option value="house">Տուն</option>
+                <option value="apartment">Բնակարան</option>
+            </select>
         </div>
 
-        <!-- Manager tab -->
-        <div title="Manager" id="managerTab" style="padding:10px;">
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div class="tool-row">
-              <div class="tool-left">
-                <input id="mgrSearch" class="easyui-textbox" style="width:280px" data-options="prompt:'Search (Customer Code, Name, Card...)'"/>
-                <button class="cta ghost" id="mgrFilterBtn">Filter</button>
-                <button class="cta ghost" id="mgrRefreshBtn">Refresh</button>
-              </div>
-              <div class="tool-right">
-                <div style="display:flex; gap:8px;">
-                  <button class="cta" id="mgrAddBtn">Add</button>
-                  <button class="cta secondary" id="mgrEditBtn">Edit</button>
-                  <button class="cta danger" id="mgrDeleteBtn">Delete</button>
-                  <div style="display:flex;align-items:center;gap:6px;">
-                    <label>Rows:</label>
-                    <select id="mgrPageSize" class="easyui-combobox" style="width:90px;">
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                      <option value="30">30</option>
-                      <option value="40">40</option>
-                      <option value="50">50</option>
-                      <option value="100">100</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+        <div id="houseFields" style="display:none;">
+            <div class="fitem">
+                <label>Տան համար:</label>
+                <input class="easyui-numberbox" name="houseNumber" style="width:100%">
             </div>
-
-            <table id="mgrGrid" class="easyui-datagrid" style="width:100%"
-                   data-options="singleSelect:true,rownumbers:true,pagination:true,fitColumns:true">
-              <thead>
-                <tr>
-                  <th data-options="field:'customerCode',width:80">Customer Code</th>
-                  <th data-options="field:'nameSurname',width:160">Name Surname</th>
-                  <th data-options="field:'cardNumber',width:120">Card Number</th>
-                  <th data-options="field:'amount',width:80,align:'right'">Amount</th>
-                  <th data-options="field:'bonus',width:60,align:'center'">Bonus</th>
-                  <th data-options="field:'status',width:80,align:'center'">Status</th>
-                  <th data-options="field:'comment',width:220">Comment</th>
-                </tr>
-              </thead>
-            </table>
-
-          </div>
         </div>
 
-        <!-- User tab -->
-        <div title="User" id="userTab" style="padding:10px;">
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div class="tool-row">
-              <div class="tool-left">
-                <input id="userSearch" class="easyui-textbox" style="width:280px" data-options="prompt:'Search...'"/>
-                <button class="cta ghost" id="userFilterBtn">Filter</button>
-                <button class="cta ghost" id="userRefreshBtn">Refresh</button>
-              </div>
-              <div class="tool-right">
-                <div style="display:flex; gap:8px;">
-                  <div style="display:flex;align-items:center;gap:6px;">
-                    <label>Rows:</label>
-                    <select id="userPageSize" class="easyui-combobox" style="width:90px;">
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                      <option value="30">30</option>
-                      <option value="40">40</option>
-                      <option value="50">50</option>
-                      <option value="100">100</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <table id="userGrid" class="easyui-datagrid" style="width:100%"
-                   data-options="singleSelect:true,rownumbers:true,pagination:true,fitColumns:true">
-              <thead>
-                <tr>
-                  <th data-options="field:'customerCode',width:80">Customer Code</th>
-                  <th data-options="field:'firstName',width:120">First Name</th>
-                  <th data-options="field:'lastName',width:120">Last Name</th>
-                  <th data-options="field:'cardNumber',width:120">Card Number</th>
-                  <th data-options="field:'amount',width:80,align:'right'">Amount</th>
-                  <th data-options="field:'bonus',width:60,align:'center'">Bonus</th>
-                  <th data-options="field:'status',width:80,align:'center'">Status</th>
-                </tr>
-              </thead>
-            </table>
-
-          </div>
+        <div id="apartmentFields" style="display:none;">
+            <div class="fitem"><label>Շենքի համար:</label><input class="easyui-numberbox" name="buildingNumber" style="width:100%"></div>
+            <div class="fitem"><label>Մուտքի համար:</label><input class="easyui-numberbox" name="entranceNumber" style="width:100%"></div>
+            <div class="fitem"><label>Դամաֆոնի կոդ:</label><input class="easyui-textbox" name="intercomCode" style="width:100%"></div>
+            <div class="fitem"><label>Հարկ:</label><input class="easyui-numberbox" name="floor" style="width:100%"></div>
+            <div class="fitem"><label>Բնակարանի համար:</label><input class="easyui-numberbox" name="apartmentNumber" style="width:100%"></div>
         </div>
 
-      </div>
-    </div>
+        <div class="fitem">
+            <label>Ծառայության տեսակ:</label>
+            <select id="serviceType" class="easyui-combobox" name="serviceType" style="width:100%">
+                <option value="1000">Ծառայություն 1 - 1000֏</option>
+                <option value="2000">Ծառայություն 2 - 2000֏</option>
+                <option value="3000">Ծառայություն 3 - 3000֏</option>
+            </select>
+        </div>
 
-    <div class="footer">Demo application — for production deploy backend authentication & persistence.</div>
-  </div>
+        <div class="fitem">
+            <label>ՔՄ:</label>
+            <input class="easyui-numberbox" id="sqm" name="sqm" style="width:100%">
+        </div>
+        <div class="price-display" id="totalPrice">Գին: 0֏</div>
 
-  <!-- DIALOGS -->
-  <!-- Add/Edit dialog (shared) -->
-  <div id="dlgAddEdit" class="easyui-dialog" style="width:520px;padding:10px 20px"
-       closed="true" buttons="#dlgBtns" modal="true">
-    <form id="dlgForm" class="dlg-form" style="padding-top:6px;">
-      <div class="fitem"><label>Customer ID</label><input name="customerId" id="f_customerId"/></div>
-      <div class="fitem"><label>First Name</label><input name="firstName" id="f_firstName"/></div>
-      <div class="fitem"><label>Last Name</label><input name="lastName" id="f_lastName"/></div>
-      <div class="fitem"><label>Card Number</label><input name="cardNumber" id="f_cardNumber"/></div>
-      <div class="fitem"><label>Amount</label><input name="amount" type="number" id="f_amount"/></div>
-      <div class="fitem"><label>Bonus</label><input name="bonus" id="f_bonus" readonly/></div>
-      <div class="fitem"><label>Status</label>
-        <select name="status" id="f_status">
-          <option value="active">active</option>
-          <option value="inactive">inactive</option>
-          <option value="blocked">blocked</option>
-        </select>
-      </div>
-      <div class="fitem"><label>Comment</label><textarea name="comment" id="f_comment" rows="3"></textarea></div>
+        <div style="margin-top:15px;">
+            <a href="javascript:void(0)" id="saveTemplate" class="easyui-linkbutton" data-options="iconCls:'icon-save'" style="width:48%">Պահպանել շաբլոնը</a>
+            <a href="javascript:void(0)" id="submitForm" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="width:48%">Ուղարկել</a>
+        </div>
     </form>
-  </div>
-  <div id="dlgBtns" style="text-align:center;padding:8px;">
-    <a href="#" id="dlgCancel" class="cta ghost">Cancel</a>
-    <a href="#" id="dlgSave" class="cta">Save</a>
-  </div>
-
-  <!-- Delete confirm dialog -->
-  <div id="dlgDelete" class="easyui-dialog" style="width:360px;padding:18px"
-       closed="true" modal="true" buttons="#dlgDeleteBtns">
-    <div style="font-size:15px;">Are you sure you want to delete?</div>
-  </div>
-  <div id="dlgDeleteBtns" style="text-align:center;padding:8px;">
-    <a href="#" id="delCancel" class="cta ghost">Cancel</a>
-    <a href="#" id="delConfirm" class="cta danger">Delete</a>
-  </div>
-
-  <!-- Exit confirm dialog -->
-  <div id="dlgExit" class="easyui-dialog" style="width:360px;padding:18px"
-       closed="true" modal="true" buttons="#dlgExitBtns">
-    <div style="font-size:15px;">Are you sure you want to exit?</div>
-  </div>
-  <div id="dlgExitBtns" style="text-align:center;padding:8px;">
-    <a href="#" id="exitCancel" class="cta ghost">Cancel</a>
-    <a href="#" id="exitConfirm" class="cta danger">Exit</a>
-  </div>
-
-  <!-- Filter dialog -->
-  <div id="dlgFilter" class="easyui-dialog" style="width:360px;padding:18px" closed="true" modal="true" buttons="#dlgFilterBtns">
-    <div style="margin-bottom:8px;">
-      <label>Status filter:</label>
-      <select id="filterStatus" class="easyui-combobox" style="width:100%;">
-        <option value="">(any)</option>
-        <option value="active">active</option>
-        <option value="inactive">inactive</option>
-        <option value="blocked">blocked</option>
-      </select>
-    </div>
-  </div>
-  <div id="dlgFilterBtns" style="text-align:center;padding:8px;">
-    <a href="#" id="filterCancel" class="cta ghost">Cancel</a>
-    <a href="#" id="filterApply" class="cta">Apply</a>
-  </div>
-
 </div>
 
 <script>
-/**
- * Frontend-only demo application
- * - Stores application data in localStorage
- * - Uses MD5 hashes for stored passwords (note: move to server for production)
- * - Implements Admin, Manager, User pages with required capabilities
- */
-
-const STORAGE_KEYS = {
-  USERS: 'app_users_v1',
-  CUSTOMERS: 'app_customers_v1',
-  ROLES: 'app_roles_v1',
-  INTEGRATIONS: 'app_integrations_v1',
-  DBS: 'app_dbs_v1'
-};
-
-// Predefined MD5 hashes for credentials (only hashes are embedded here).
-// Plaintext credentials were provided by the user but are NOT included here.
-const PREDEFINED_USER_HASHES = {
-  "root":  "7052845d7e8f24f5ad1de363e4069786", // MD5 of Root123456!
-  "manager":"9d4e1c425bfec3e5999017077306bc3d", // MD5 of Manager123456!
-  "user":  "d9df80dcfc3a7096ebebc461398a2427"  // MD5 of User123456!
-};
-
-// Default roles
-const DEFAULT_ROLES = [
-  {role:'admin', desc:'Administrator - full access'},
-  {role:'manager', desc:'Manager - limited control'},
-  {role:'user', desc:'Standard user - read only'}
-];
-
-// Utility: load/store JSON
-function load(key, fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback;}catch(e){return fallback;} }
-function save(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
-
-// Initialize application storage (first-run)
-function ensureInitialData(){
-  if(!load(STORAGE_KEYS.USERS)){ 
-    const users = [
-      { login:'root', hash:PREDEFINED_USER_HASHES.root, role:'admin' },
-      { login:'manager', hash:PREDEFINED_USER_HASHES.manager, role:'manager' },
-      { login:'user', hash:PREDEFINED_USER_HASHES.user, role:'user' }
-    ];
-    save(STORAGE_KEYS.USERS, users);
-  }
-  if(!load(STORAGE_KEYS.ROLES)){
-    save(STORAGE_KEYS.ROLES, DEFAULT_ROLES);
-  }
-  if(!load(STORAGE_KEYS.CUSTOMERS)){
-    // create sample data 35 rows
-    const sample=[];
-    for(let i=1;i<=35;i++){
-      const amount = Math.floor(Math.random()*200000)+500;
-      sample.push({
-        id:i,
-        customerId: 'C' + (1000+i),
-        firstName: 'First'+i,
-        lastName: 'Last'+i,
-        cardNumber: 'CARD'+(1000+i),
-        amount: amount,
-        bonus: Math.floor(amount/1000),
-        status: ['active','inactive','blocked'][Math.floor(Math.random()*3)],
-        comment: 'Sample comment ' + i
-      });
-    }
-    save(STORAGE_KEYS.CUSTOMERS, sample);
-  }
-  if(!load(STORAGE_KEYS.INTEGRATIONS)) save(STORAGE_KEYS.INTEGRATIONS, []);
-  if(!load(STORAGE_KEYS.DBS)) save(STORAGE_KEYS.DBS, []);
-}
-ensureInitialData();
-
-/* Session */
-let session = { loggedIn:false, login:null, role:null };
-
-/* Helpers */
-function getUsers(){ return load(STORAGE_KEYS.USERS, []); }
-function getCustomers(){ return load(STORAGE_KEYS.CUSTOMERS, []); }
-function getRoles(){ return load(STORAGE_KEYS.ROLES, []); }
-function getIntegrations(){ return load(STORAGE_KEYS.INTEGRATIONS, []); }
-function getDBs(){ return load(STORAGE_KEYS.DBS, []); }
-
-function setCustomers(arr){ save(STORAGE_KEYS.CUSTOMERS, arr); }
-
-// Login
-function attemptLogin(username, passwordPlain){
-  const users = getUsers();
-  const hashed = md5(passwordPlain||'');
-  const user = users.find(u=>u.login === username && u.hash === hashed);
-  if(user){
-    session.loggedIn=true; session.login=user.login; session.role=user.role;
-    return true;
-  }
-  return false;
-}
-
-/* UI wiring & datagrids */
-$(function(){
-
-  // Initialize page-size selects
-  $('#adminPageSize').combobox();
-  $('#mgrPageSize').combobox();
-  $('#userPageSize').combobox();
-
-  // Setup data grids with pagination options
-  function setupGridPagination($dg, pageSizeSelectId){
-    const opts = $dg.datagrid('options');
-    opts.pageSize = parseInt($(pageSizeSelectId).val()||10);
-    opts.pageList = [10,20,30,40,50,100];
-    $dg.datagrid('getPager').pagination({
-      pageSize: opts.pageSize,
-      pageList: opts.pageList
+    $.extend($.fn.validatebox.defaults.rules, {
+        phoneCheck: {
+            validator: function(value){
+                return /^\d{8}$/.test(value);
+            },
+            message: 'Մուտքագրեք ճիշտ հեռախոսահամար (8 նիշ):'
+        }
     });
-  }
 
-  // Admin datagrid init
-  $('#adminGrid').datagrid({
-    loadFilter: pagerFilter,
-    onDblClickRow: function(index,row){ openEditDialog('admin'); }
-  });
-  setupGridPagination($('#adminGrid'), '#adminPageSize');
-
-  // Manager datagrid init
-  $('#mgrGrid').datagrid({
-    loadFilter: pagerFilter,
-    onDblClickRow:function(){ openEditDialog('manager'); }
-  });
-  setupGridPagination($('#mgrGrid'), '#mgrPageSize');
-
-  // User datagrid init
-  $('#userGrid').datagrid({
-    loadFilter: pagerFilter
-  });
-  setupGridPagination($('#userGrid'), '#userPageSize');
-
-  // Roles / users / integrations grids load
-  function refreshRoleUserIntegrationGrids(){
-    const roles = getRoles();
-    $('#rolesGrid').datagrid({data: roles});
-    // update role select controls
-    const roleOptions = roles.map(r=>({value:r.role,text:r.role}));
-    $('#newUserRole').combobox({data: roleOptions});
-    $('#newUserRole').combobox('setValue', roles[0].role);
-    // users
-    const users = getUsers().map(u=>({login:u.login, role:u.role}));
-    $('#usersGrid').datagrid({data: users});
-    // integrations & dbs
-    $('#integrationsGrid').datagrid({data: getIntegrations()});
-    $('#dbGrid').datagrid({data: getDBs()});
-  }
-  refreshRoleUserIntegrationGrids();
-
-  // LOAD data into grids
-  function loadAllGrids(){
-    const customers = getCustomers();
-    // admin grid expects fields as stored
-    $('#adminGrid').datagrid('loadData', customers.map(c=>({
-      customerId: c.customerId || c.customerId,
-      firstName: c.firstName,
-      lastName: c.lastName,
-      cardNumber: c.cardNumber,
-      amount: c.amount,
-      bonus: c.bonus,
-      status: c.status,
-      comment: c.comment,
-      _id: c.id
-    })));
-    // manager grid: combine nameSurname and different key names
-    $('#mgrGrid').datagrid('loadData', customers.map(c=>({
-      customerCode: c.customerId,
-      nameSurname: c.firstName + ' ' + c.lastName,
-      cardNumber: c.cardNumber,
-      amount: c.amount,
-      bonus: c.bonus,
-      status: c.status,
-      comment: c.comment,
-      _id: c.id,
-      firstName: c.firstName,
-      lastName: c.lastName
-    })));
-    // user grid (less columns)
-    $('#userGrid').datagrid('loadData', customers.map(c=>({
-      customerCode: c.customerId,
-      firstName: c.firstName,
-      lastName: c.lastName,
-      cardNumber: c.cardNumber,
-      amount: c.amount,
-      bonus: c.bonus,
-      status: c.status,
-      _id: c.id
-    })));
-  }
-
-  loadAllGrids();
-
-  // Utility: pagination loader for datagrid (client-side)
-  function pagerFilter(data){
-    if (!data) return {total:0,rows:[]};
-    if ($.isArray(data)){
-      data = {total:data.length,rows:data};
-    }
-    var dg = $(this);
-    var opts = dg.datagrid('options');
-    var pager = dg.datagrid('getPager');
-    pager.pagination({
-      onSelectPage:function(pageNum, pageSize){
-        opts.pageNumber = pageNum;
-        opts.pageSize = pageSize;
-        pager.pagination('refresh', {pageNumber:pageNum, pageSize:pageSize});
-        dg.datagrid('loadData', data);
-      }
+    $('#buildingType').combobox({
+        onChange: function(value){
+            if(value === 'house'){
+                $('#houseFields').show();
+                $('#apartmentFields').hide();
+            } else {
+                $('#houseFields').hide();
+                $('#apartmentFields').show();
+            }
+        }
     });
-    if (!data.originalRows) data.originalRows = (data.rows || data);
-    var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
-    var end = start + parseInt(opts.pageSize);
-    var rows = (data.originalRows || data.rows).slice(start, end);
-    return {total:(data.originalRows||data.rows||data).length, rows: rows};
-  }
 
-  // LOGIN button handlers
-  $('#btnLogin').on('click', function(e){
-    e.preventDefault();
-    const username = $('#loginUsername').textbox('getValue') || $('#loginUsername').val();
-    const password = $('#loginPassword').textbox('getValue') || $('#loginPassword').val();
-    if(!username || !password){ $.messager.alert('Error','Please enter username and password','error'); return; }
-    const ok = attemptLogin(username.trim(), password);
-    if(ok){
-      $('#loginPage').hide();
-      $('#appMain').show();
-      $('#currentUser').text(session.login + ' ('+session.role.toUpperCase()+')');
-      // Show only allowed tabs
-      if(session.role==='admin'){
-        $('#navTabs').tabs('select','Admin');
-        $('#navTabs').tabs('enableTab','Admin');
-        $('#navTabs').tabs('enableTab','Manager');
-        $('#navTabs').tabs('enableTab','User');
-      } else if(session.role==='manager'){
-        $('#navTabs').tabs('select','Manager');
-        $('#navTabs').tabs('disableTab','Admin');
-        $('#navTabs').tabs('enableTab','Manager');
-        $('#navTabs').tabs('enableTab','User');
-      } else {
-        $('#navTabs').tabs('select','User');
-        $('#navTabs').tabs('disableTab','Admin');
-        $('#navTabs').tabs('disableTab','Manager');
-        $('#navTabs').tabs('enableTab','User');
-      }
-    } else {
-      $.messager.alert('Login failed','Invalid username or password','warning');
+    function updatePrice(){
+        let sqm = parseFloat($('#sqm').numberbox('getValue')) || 0;
+        let pricePerSqm = parseFloat($('#serviceType').combobox('getValue')) || 0;
+        $('#totalPrice').text('Գին: ' + (sqm * pricePerSqm) + '֏');
     }
-  });
-  $('#btnClear').on('click', function(){ $('#loginUsername').textbox('clear'); $('#loginPassword').textbox('clear'); });
+    $('#sqm, #serviceType').on('change', updatePrice);
 
-  // EXIT handling
-  $('#btnExit').on('click', function(){ $('#dlgExit').dialog('open'); });
-  $('#exitCancel').on('click', function(){ $('#dlgExit').dialog('close'); });
-  $('#exitConfirm').on('click', function(){
-    // clear session and UI
-    session = { loggedIn:false, login:null, role:null };
-    $('#appMain').hide();
-    $('#loginPage').show();
-    $('#loginUsername').textbox('setValue',''); $('#loginPassword').textbox('setValue','');
-    $('#dlgExit').dialog('close');
-  });
+    $('#saveTemplate').click(function(){
+        let formData = $('#orderForm').serializeArray();
+        localStorage.setItem('orderTemplate', JSON.stringify(formData));
+        $.messager.alert('Պահպանված է', 'Շաբլոնը հաջողությամբ պահպանվեց');
+    });
 
-  // -------------------------
-  // Admin: search, filter, refresh, add/edit/delete
-  // -------------------------
-  $('#adminRefreshBtn').on('click', function(){ loadAllGrids(); $.messager.show({title:'Refreshed',msg:'Data refreshed.'}) });
-  $('#adminPageSize').on('change', function(){
-    const s = parseInt($(this).val()); $('#adminGrid').datagrid('getPager').pagination({pageSize:s}); $('#adminGrid').datagrid('options').pageSize=s;
-    loadAllGrids();
-  });
-  $('#adminSearch').textbox().textbox('textbox').on('keyup', function(e){
-    if(e.keyCode === 13){
-      applyAdminSearch();
-    }
-  });
-  function applyAdminSearch(){
-    const term = $('#adminSearch').textbox('getValue').toLowerCase();
-    const all = getCustomers();
-    if(!term) { loadAllGrids(); return; }
-    const filtered = all.filter(c => (
-      (c.customerId||'').toString().toLowerCase().includes(term) ||
-      (c.firstName||'').toLowerCase().includes(term) ||
-      (c.lastName||'').toLowerCase().includes(term) ||
-      (c.cardNumber||'').toLowerCase().includes(term) ||
-      (c.comment||'').toLowerCase().includes(term)
-    ));
-    $('#adminGrid').datagrid('loadData', filtered.map(c=>({
-      customerId: c.customerId,
-      firstName: c.firstName,
-      lastName: c.lastName,
-      cardNumber: c.cardNumber,
-      amount: c.amount,
-      bonus: c.bonus,
-      status: c.status,
-      comment: c.comment,
-      _id: c.id
-    })));
-  }
-  $('#adminFilterBtn').on('click', function(){ $('#dlgFilter').dialog('open'); });
-  $('#filterCancel').on('click', function(){ $('#dlgFilter').dialog('close'); });
-  $('#filterApply').on('click', function(){
-    const st = $('#filterStatus').combobox('getValue');
-    const all = getCustomers();
-    const filtered = st? all.filter(c=>c.status===st) : all;
-    $('#adminGrid').datagrid('loadData', filtered.map(c=>({
-      customerId: c.customerId, firstName:c.firstName,lastName:c.lastName,cardNumber:c.cardNumber,amount:c.amount,bonus:c.bonus,status:c.status,comment:c.comment,_id:c.id
-    })));
-    $('#dlgFilter').dialog('close');
-  });
+    $(document).ready(function(){
+        let savedData = localStorage.getItem('orderTemplate');
+        if(savedData){
+            savedData = JSON.parse(savedData);
+            savedData.forEach(item => {
+                $('[name="'+item.name+'"]').val(item.value);
+            });
+            updatePrice();
+        }
+    });
 
-  // Add (Admin)
-  $('#adminAddBtn').on('click', function(){
-    openAddDialog('admin');
-  });
-  // Edit (Admin)
-  $('#adminEditBtn').on('click', function(){
-    const row = $('#adminGrid').datagrid('getSelected');
-    if(!row){ $.messager.alert('Select row','Please select a row to edit','info'); return; }
-    openEditDialog('admin');
-  });
-  // Delete (Admin)
-  let pendingDeleteContext = null;
-  $('#adminDeleteBtn').on('click', function(){
-    const row = $('#adminGrid').datagrid('getSelected');
-    if(!row){ $.messager.alert('Select row','Please select a row to delete','info'); return; }
-    pendingDeleteContext = { who:'admin', row:row };
-    $('#dlgDelete').dialog('open');
-  });
-
-  // -------------------------
-  // Manager: search, filter, refresh, add/edit/delete (similar to admin but names differ)
-  // -------------------------
-  $('#mgrRefreshBtn').on('click', function(){ loadAllGrids(); $.messager.show({title:'Refreshed',msg:'Data refreshed.'}) });
-  $('#mgrPageSize').on('change', function(){
-    const s = parseInt($(this).val()); $('#mgrGrid').datagrid('getPager').pagination({pageSize:s}); $('#mgrGrid').datagrid('options').pageSize=s;
-    loadAllGrids();
-  });
-  $('#mgrSearch').textbox().textbox('textbox').on('keyup', function(e){ if(e.keyCode===13) applyMgrSearch(); });
-  function applyMgrSearch(){
-    const term = $('#mgrSearch').textbox('getValue').toLowerCase();
-    const all = getCustomers();
-    if(!term){ loadAllGrids(); return; }
-    const filtered = all.filter(c => (
-      (c.customerId||'').toString().toLowerCase().includes(term) ||
-      ((c.firstName+' '+c.lastName)||'').toLowerCase().includes(term) ||
-      (c.cardNumber||'').toLowerCase().includes(term)
-    ));
-    $('#mgrGrid').datagrid('loadData', filtered.map(c=>({
-      customerCode: c.customerId,
-      nameSurname: c.firstName + ' ' + c.lastName,
-      cardNumber: c.cardNumber,
-      amount: c.amount,
-      bonus: c.bonus,
-      status: c.status,
-      comment: c.comment,
-      _id: c.id,
-      firstName: c.firstName, lastName: c.lastName
-    })));
-  }
-  $('#mgrFilterBtn').on('click', function(){ $('#dlgFilter').dialog('open'); });
-
-  $('#mgrAddBtn').on('click', function(){ openAddDialog('manager'); });
-  $('#mgrEditBtn').on('click', function(){ const row = $('#mgrGrid').datagrid('getSelected'); if(!row){ $.messager.alert('Select row','Please select a row to edit','info'); return;} openEditDialog('manager'); });
-  $('#mgrDeleteBtn').on('click', function(){ const row = $('#mgrGrid').datagrid('getSelected'); if(!row){ $.messager.alert('Select row','Please select a row to delete','info'); return; } pendingDeleteContext={who:'manager', row:row}; $('#dlgDelete').dialog('open'); });
-
-  // -------------------------
-  // User page handlers (read-only)
-  // -------------------------
-  $('#userRefreshBtn').on('click', function(){ loadAllGrids(); $.messager.show({title:'Refreshed',msg:'Data refreshed.'}); });
-  $('#userPageSize').on('change', function(){ const s = parseInt($(this).val()); $('#userGrid').datagrid('getPager').pagination({pageSize:s}); $('#userGrid').datagrid('options').pageSize=s; loadAllGrids(); });
-  $('#userFilterBtn').on('click', function(){ $('#dlgFilter').dialog('open'); });
-
-  // -------------------------
-  // Add/Edit Dialog logic (shared)
-  // -------------------------
-  let editContext = null; // {mode:'add'|'edit', who:'admin'|'manager', row:...}
-  function openAddDialog(who){
-    editContext = { mode:'add', who:who };
-    $('#dlgForm')[0].reset();
-    $('#f_bonus').val('');
-    $('#dlgAddEdit').dialog({title:'Add record', closed:false});
-  }
-  function openEditDialog(who){
-    const row = (who==='admin')? $('#adminGrid').datagrid('getSelected') : $('#mgrGrid').datagrid('getSelected');
-    if(!row){ $.messager.alert('Select row','Please select row first','info'); return; }
-    editContext = { mode:'edit', who:who, row:row };
-    // prefill
-    if(who==='admin'){
-      $('#f_customerId').val(row.customerId || '');
-      $('#f_firstName').val(row.firstName || '');
-      $('#f_lastName').val(row.lastName || '');
-      $('#f_cardNumber').val(row.cardNumber || '');
-      $('#f_amount').val(row.amount || 0);
-      $('#f_bonus').val(row.bonus || 0);
-      $('#f_status').val(row.status || 'active');
-      $('#f_comment').val(row.comment || '');
-    } else {
-      // manager row has nameSurname and maybe firstName/lastName stored (we set those)
-      $('#f_customerId').val(row.customerCode || '');
-      const fullname = row.nameSurname || (row.firstName+' '+row.lastName||'');
-      const parts = (fullname||'').split(' ');
-      $('#f_firstName').val(parts[0] || '');
-      $('#f_lastName').val(parts.slice(1).join(' ') || '');
-      $('#f_cardNumber').val(row.cardNumber || '');
-      $('#f_amount').val(row.amount || 0);
-      $('#f_bonus').val(row.bonus || 0);
-      $('#f_status').val(row.status || 'active');
-      $('#f_comment').val(row.comment || '');
-    }
-    $('#dlgAddEdit').dialog({title:'Edit record', closed:false});
-  }
-
-  // Automatic bonus recalculation when amount changes
-  $('#f_amount').on('input', function(){
-    const v = parseFloat($(this).val()) || 0;
-    const b = Math.floor(v/1000);
-    $('#f_bonus').val(b);
-  });
-
-  $('#dlgCancel').on('click', function(){ $('#dlgAddEdit').dialog('close'); });
-
-  $('#dlgSave').on('click', function(){
-    const form = {
-      customerId: $('#f_customerId').val(),
-      firstName: $('#f_firstName').val(),
-      lastName: $('#f_lastName').val(),
-      cardNumber: $('#f_cardNumber').val(),
-      amount: Number($('#f_amount').val() || 0),
-      bonus: Number($('#f_bonus').val() || 0),
-      status: $('#f_status').val(),
-      comment: $('#f_comment').val()
-    };
-    // ensure some fields
-    if(!form.customerId || !form.firstName){ $.messager.alert('Validation','Customer ID and First Name are required','warning'); return; }
-    const customers = getCustomers();
-    if(editContext.mode==='add'){
-      // create new id
-      const newId = (customers.length? Math.max(...customers.map(c=>c.id))+1 : 1);
-      const newRec = Object.assign({id:newId}, form);
-      newRec.bonus = Math.floor(newRec.amount/1000);
-      customers.push(newRec);
-      setCustomers(customers);
-      loadAllGrids();
-      $('#dlgAddEdit').dialog('close');
-      $.messager.show({title:'Added',msg:'Record added.'});
-    } else {
-      // edit - find selected row id
-      const sel = (editContext.who==='admin')? $('#adminGrid').datagrid('getSelected') : $('#mgrGrid').datagrid('getSelected');
-      if(!sel){ $.messager.alert('Select row','No row selected','info'); return; }
-      // find by unique indicator: use customerId or stored internal id if available (_id)
-      const key = sel.customerId || sel.customerCode;
-      const idx = customers.findIndex(c => c.customerId === key || c.id === sel._id);
-      if(idx===-1){ $.messager.alert('Error','Original record not found','error'); return; }
-      customers[idx] = Object.assign({}, customers[idx], form, {bonus: Math.floor(form.amount/1000)});
-      setCustomers(customers);
-      loadAllGrids();
-      $('#dlgAddEdit').dialog('close');
-      $.messager.show({title:'Saved',msg:'Record updated.'});
-    }
-  });
-
-  // Delete confirmation handlers
-  $('#delCancel').on('click', function(){ pendingDeleteContext=null; $('#dlgDelete').dialog('close'); });
-  $('#delConfirm').on('click', function(){
-    if(!pendingDeleteContext){ $('#dlgDelete').dialog('close'); return; }
-    const customers = getCustomers();
-    const sel = pendingDeleteContext.row;
-    const key = sel.customerId || sel.customerCode;
-    const idx = customers.findIndex(c => c.customerId === key || c.id === sel._id);
-    if(idx>-1){
-      customers.splice(idx,1);
-      setCustomers(customers);
-      loadAllGrids();
-    }
-    pendingDeleteContext = null;
-    $('#dlgDelete').dialog('close');
-    $.messager.show({title:'Deleted',msg:'Record deleted.'});
-  });
-
-  // Filter open for other pages
-  $('#mgrFilterBtn,#userFilterBtn').on('click', function(){ $('#dlgFilter').dialog('open'); });
-
-  // ----------------------------------------------
-  // Admin: Roles and Users and Integrations handling
-  // ----------------------------------------------
-  $('#addRoleBtn').on('click', function(){
-    const name = $('#newRoleName').textbox('getValue') || $('#newRoleName').val();
-    if(!name){ $.messager.alert('Validation','Enter role name','warning'); return; }
-    const roles = getRoles();
-    if(roles.find(r=>r.role===name)){ $.messager.alert('Duplicate','Role already exists','info'); return; }
-    roles.push({role: name, desc: ''});
-    save(STORAGE_KEYS.ROLES, roles);
-    refreshRoleUserIntegrationGrids();
-    $('#newRoleName').textbox('clear');
-  });
-
-  $('#addUserBtn').on('click', function(){
-    const login = $('#newUserLogin').textbox('getValue') || $('#newUserLogin').val();
-    const pass = $('#newUserPassword').textbox('getValue') || $('#newUserPassword').val();
-    const role = $('#newUserRole').combobox('getValue');
-    if(!login || !pass || !role){ $.messager.alert('Validation','login, password and role are required','warning'); return; }
-    const users = getUsers();
-    if(users.find(u=>u.login===login)){ $.messager.alert('Duplicate','User already exists','info'); return; }
-    const hashed = md5(pass);
-    users.push({login:login, hash:hashed, role:role});
-    save(STORAGE_KEYS.USERS, users);
-    $('#newUserLogin').textbox('clear'); $('#newUserPassword').textbox('clear');
-    refreshRoleUserIntegrationGrids();
-    $.messager.show({title:'User added', msg:'New user stored (MD5 hashed) in local storage.'});
-  });
-
-  $('#saveIntegration').on('click', function(){
-    const name = $('#integrationName').val();
-    const endpoint = $('#integrationEndpoint').val();
-    const token = $('#integrationToken').val();
-    if(!name || !endpoint){ $.messager.alert('Validation','Name and endpoint required','warning'); return; }
-    const list = getIntegrations();
-    list.push({name:name, endpoint:endpoint, token:token});
-    save(STORAGE_KEYS.INTEGRATIONS, list);
-    refreshRoleUserIntegrationGrids();
-    $('#integrationName').val(''); $('#integrationEndpoint').val(''); $('#integrationToken').val('');
-  });
-
-  $('#testIntegration').on('click', function(){
-    // Simulated test - in production call real API
-    $.messager.alert('Test (simulated)', 'Integration test simulated. In production implement a server-side test.', 'info');
-  });
-
-  $('#saveDb').on('click', function(){
-    const label = $('#dbLabel').val();
-    const conn = $('#dbConn').val();
-    if(!label || !conn){ $.messager.alert('Validation','DB label and connection required','warning'); return; }
-    const list = getDBs();
-    list.push({label:label, conn:conn});
-    save(STORAGE_KEYS.DBS, list);
-    refreshRoleUserIntegrationGrids();
-    $('#dbLabel').val(''); $('#dbConn').val('');
-  });
-  $('#testDb').on('click', function(){ $.messager.alert('Test (simulated)', 'DB connection test simulated. Use server-side logic for real connections.', 'info'); });
-
-  // -------------------------
-  // Delete dialog closes on ESC
-  $(document).on('keydown', function(e){ if(e.key==='Escape'){ $('.easyui-dialog').dialog('close'); } });
-
-  // -------------------------
-  // initial UI state: hide admin/manager tabs until login
-  $('#appMain').hide();
-
-  // Expose a function to refresh grids externally
-  window.app_refreshAll = function(){ refreshRoleUserIntegrationGrids(); loadAllGrids(); };
-
-});
-
-/* Utility function: combine and apply search/filters on page change is already handled by loadData+pagerFilter */
-
-/* End of script */
+    $('#submitForm').click(function(){
+        if($('#orderForm').form('validate')){
+            let formData = $('#orderForm').serializeArray();
+            
+            // Google Sheets API Integration
+            fetch("YOUR_GOOGLE_SCRIPT_WEB_APP_URL", {
+                method: "POST",
+                body: JSON.stringify(formData),
+                headers: { "Content-Type": "application/json" }
+            }).then(res => {
+                $.messager.alert('Հաջողություն', 'Շնորհակալություն, Ձեր պատվերը հաջողությամբ գրանցվեց');
+                setTimeout(()=> location.reload(), 3000);
+            });
+        }
+    });
 </script>
 </body>
 </html>
