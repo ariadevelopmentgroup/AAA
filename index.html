@@ -1,916 +1,333 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="hy">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Admin Panel — Web App (Single File, MD5 hashed creds)</title>
-<style>
-  :root{
-    --bg:#0f1724; --card:#0b1220; --muted:#9aa6b2; --accent:#2dd4bf;
-    --glass: rgba(255,255,255,0.03);
-    --danger:#ef4444;
-    --success:#10b981;
-    --max-width:1200px;
-    font-family: Inter, Roboto, "Segoe UI", Arial, sans-serif;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%; margin:0; background:linear-gradient(180deg,#071023 0%, #081227 100%); color:#e6eef6}
-  a{color:var(--accent)}
-  .container{max-width:var(--max-width); margin:18px auto; padding:18px;}
-  /* Login */
-  .login-screen{display:flex;align-items:center;justify-content:center;height:calc(100vh - 36px);}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.03); padding:22px; border-radius:12px; box-shadow:0 8px 30px rgba(2,6,23,0.7)}
-  .brand{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-  .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042028}
-  input,select,textarea,button{font:inherit}
-  .form-row{margin:10px 0}
-  input[type="text"], input[type="password"], select, textarea{
-    width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04);
-    background: transparent; color:inherit;
-  }
-  button.btn{
-    background:var(--accent); color:#042028; padding:10px 14px; border-radius:8px; border:0; cursor:pointer;
-  }
-  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06); color:var(--muted); padding:8px 12px;}
-  /* Admin layout */
-  .app{display:grid; grid-template-columns:260px 1fr; gap:18px; min-height:calc(100vh - 36px);}
-  .sidebar{background:var(--card); padding:14px; border-radius:12px; display:flex; flex-direction:column; gap:8px;}
-  .sidebar .user{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px}
-  .nav{margin-top:8px; display:flex;flex-direction:column; gap:6px}
-  .nav button{background:transparent;color:var(--muted);border:0;padding:10px;border-radius:8px;text-align:left;cursor:pointer}
-  .nav button.active{background:linear-gradient(90deg, rgba(45,212,191,0.08), rgba(96,165,250,0.03)); color:var(--accent); font-weight:600}
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--glass);border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
-  .exit-btn{background:linear-gradient(90deg,#ef4444,#f97316); border:0;color:white;padding:8px 12px;border-radius:8px; cursor:pointer}
-  .main{padding:10px; min-height:600px}
-  .grid{display:grid;gap:12px}
-  .cards{grid-template-columns:repeat(4,1fr)}
-  .card-small{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:16px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
-  .stat-num{font-size:22px;font-weight:700;color:var(--accent); margin-top:6px}
-  /* Elements area */
-  .elements-area{display:flex; gap:12px; flex-wrap:wrap}
-  .element-palette, .canvas{flex:1; min-width:260px}
-  .palette .item{padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:8px;cursor:grab}
-  .canvas{min-height:320px;border:2px dashed rgba(255,255,255,0.03);padding:12px;border-radius:8px}
-  .canvas .el{padding:8px;border-radius:6px;margin:6px 0;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center}
-  .publish-bar{display:flex;gap:8px;align-items:center;margin-top:8px}
-  /* Table */
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:left;color:var(--muted)}
-  th{color:#cfeff0}
-  /* Forms */
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .small{font-size:13px;color:var(--muted)}
-  /* Popup */
-  .overlay{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;z-index:9999}
-  .modal{background:#071226;padding:18px;border-radius:10px;max-width:400px;width:92%;border:1px solid rgba(255,255,255,0.04)}
-  .modal h3{margin:0 0 8px 0}
-  .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-  /* Responsive */
-  @media (max-width:1100px){ .cards{grid-template-columns:repeat(2,1fr)} .app{grid-template-columns:220px 1fr} }
-  @media (max-width:800px){ .app{grid-template-columns:1fr} .sidebar{order:2} .topbar{order:1} .cards{grid-template-columns:1fr} .brand{justify-content:center} .login-screen{padding:10px} }
-  /* Extra-large (TV) */
-  @media (min-width:1600px){ :root{--max-width:1600px} .card-small{padding:22px} .stat-num{font-size:26px} }
-  /* Utilities */
-  .muted{color:var(--muted)} .flex{display:flex;gap:8px;align-items:center}
-  .right{margin-left:auto}
-  .danger{background:var(--danger);color:white;border-radius:8px;padding:6px 8px;border:0;cursor:pointer}
-  .success{background:var(--success);color:#042028;padding:6px 8px;border-radius:8px;border:0}
-  .small-btn{padding:6px 8px;border-radius:6px;border:0;cursor:pointer}
-  .kbd{background:rgba(255,255,255,0.03);padding:6px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);font-family:monospace}
-  .hidden{display:none}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Պատվերի ձևաթուղթ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #388E3C;
+            --background-color: #f4f7f6;
+            --text-color: #333;
+            --border-color: #ddd;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --font-family: 'Roboto', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: border-color 0.3s;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="tel"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Prevent input zoom on mobile */
+        @media (max-width: 768px) {
+            input[type="text"],
+            input[type="tel"],
+            input[type="number"],
+            select {
+                font-size: 16px;
+            }
+        }
+
+        .nested-fields {
+            margin-top: 15px;
+            padding-left: 20px;
+            border-left: 2px solid var(--border-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+        
+        .price-output {
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 18px;
+            color: var(--secondary-color);
+            text-align: center;
+        }
+
+        .cta-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .cta-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        /* Responsive styles */
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="form-container">
+        <h2>Պատվերի ձևաթուղթ</h2>
+        <form id="orderForm">
+            <div class="form-group">
+                <label for="fullName">Անուն Ազգանուն</label>
+                <input type="text" id="fullName" name="Անուն Ազգանուն" required>
+            </div>
 
-<div class="container" id="root">
-  <!-- LOGIN -->
-  <div id="loginView" class="login-screen">
-    <div class="card" style="width:420px">
-      <div class="brand">
-        <div class="logo">ADM</div>
-        <div>
-          <div style="font-weight:700">Dashboard</div>
-          <div class="small muted">Ադմինիստրատորի կառավարման էջ</div>
-        </div>
-      </div>
-      <div class="form-row">
-        <label class="small muted">Մուտքանուն</label>
-        <input id="username" type="text" placeholder="Username" value="">
-      </div>
-      <div class="form-row">
-        <label class="small muted">Գաղտնաբառ</label>
-        <input id="password" type="password" placeholder="Password" value="">
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-        <button id="loginBtn" class="btn">Մուտք</button>
-      </div>
-      <div class="small muted" style="margin-top:12px">Մուտքը միայն ադմինիստրատորների համար:</div>
+            <div class="form-group">
+                <label for="phoneNumber">Հեռախոսահամար</label>
+                <input type="tel" id="phoneNumber" name="Հեռախոսահամար" placeholder="+374" required maxlength="12">
+            </div>
+
+            <div class="form-group">
+                <label for="address">Հասցե</label>
+                <input type="text" id="address" name="Հասցե" required>
+            </div>
+
+            <div class="form-group">
+                <label for="structureType">Կառույցի տեսակ</label>
+                <select id="structureType" name="Կառույցի տեսակ" required>
+                    <option value="" disabled selected>Ընտրեք կառույցի տեսակը</option>
+                    <option value="Տուն">Տուն</option>
+                    <option value="Բնակարան">Բնակարան</option>
+                    <option value="Շինություն">Շինություն</option>
+                </select>
+            </div>
+
+            <div id="houseFields" class="nested-fields hidden">
+                <div class="form-group">
+                    <label for="houseNumber">Տան №</label>
+                    <input type="text" id="houseNumber" name="Տան №">
+                </div>
+            </div>
+
+            <div id="apartmentFields" class="nested-fields hidden">
+                <div class="form-group">
+                    <label for="buildingNumber">Շենք №</label>
+                    <input type="text" id="buildingNumber" name="Շենք №">
+                </div>
+                <div class="form-group">
+                    <label for="entranceNumber">Մուտք №</label>
+                    <input type="text" id="entranceNumber" name="Մուտք №">
+                </div>
+                <div class="form-group">
+                    <label for="floorNumber">Հարկ №</label>
+                    <input type="text" id="floorNumber" name="Հարկ №">
+                </div>
+                <div class="form-group">
+                    <label for="apartmentNumber">Բնակարան №</label>
+                    <input type="text" id="apartmentNumber" name="Բնակարան №">
+                </div>
+            </div>
+
+            <div id="buildingFields" class="nested-fields hidden">
+                <div class="form-group">
+                    <label for="buildingNumber">Շինություն №</label>
+                    <input type="text" id="buildingNumber" name="Շինություն №">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="serviceType">Ծառայության տեսակ</label>
+                <select id="serviceType" name="Ծառայության տեսակ" required>
+                    <option value="" disabled selected>Ընտրեք ծառայությունը</option>
+                    <option value="Մաքրում">Մաքրում</option>
+                    <option value="Նորոգում">Նորոգում</option>
+                    <option value="Դիզայն">Դիզայն</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="area">Մակերես (քմ)</label>
+                <input type="number" id="area" name="Մակերես" required min="1">
+            </div>
+
+            <div class="form-group">
+                <label>Արժեք</label>
+                <div id="price" class="price-output">0 Դրամ</div>
+            </div>
+            
+            <button type="submit" class="cta-button">Ուղարկել</button>
+        </form>
     </div>
-  </div>
 
-  <!-- APP -->
-  <div id="appView" class="app hidden" aria-hidden="true">
-    <aside class="sidebar">
-      <div class="user">
-        <div style="width:44px;height:44px;border-radius:8px;background:linear-gradient(90deg,#60a5fa,#2dd4bf);display:flex;align-items:center;justify-content:center;font-weight:700;color:#042028">A</div>
-        <div>
-          <div style="font-weight:700">Administrator</div>
-          <div class="small muted" id="currentUser">—</div>
-        </div>
-      </div>
-      <nav class="nav" id="nav">
-        <button class="active" data-view="dashboard">Dashboard</button>
-        <button data-view="elements">Elements</button>
-        <button data-view="apis">API's</button>
-        <button data-view="integrations">Integrations</button>
-        <button data-view="settings">Settings</button>
-      </nav>
-      <div style="margin-top:auto;display:flex;gap:8px;align-items:center">
-        <div class="small muted">All Storage:</div>
-        <div style="font-weight:700" id="storageText">8 TB</div>
-      </div>
-    </aside>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('orderForm');
+            const structureTypeSelect = document.getElementById('structureType');
+            const serviceTypeSelect = document.getElementById('serviceType');
+            const areaInput = document.getElementById('area');
+            const priceOutput = document.getElementById('price');
+            const phoneNumberInput = document.getElementById('phoneNumber');
 
-    <main>
-      <div class="topbar">
-        <div class="flex">
-          <div style="font-weight:700">Admin Panel</div>
-          <div class="small muted" style="margin-left:12px" id="serverTime"></div>
-        </div>
-        <div class="flex">
-          <div class="small muted">Save: <span id="saveState">Idle</span></div>
-          <button id="exitBtn" class="exit-btn" title="Exit">Exit</button>
-        </div>
-      </div>
+            // Փոխեք սա ձեր Webhook URL-ով
+            const webhookUrl = 'YOUR_GOOGLE_SHEETS_WEBHOOK_URL_HERE'; 
 
-      <div class="main card" id="mainCard" style="margin-top:12px">
-        <!-- Views -->
-        <section id="dashboard" class="view">
-          <h2>Dashboard</h2>
-          <div class="grid cards" id="statsGrid" style="margin-top:12px">
-            <div class="card-small">
-              <div class="small muted">Ընդհանուր API-ներ</div>
-              <div class="stat-num" id="totalApis">0</div>
-            </div>
-            <div class="card-small">
-              <div class="small muted">Ակտիվ API-ներ</div>
-              <div class="stat-num" id="activeApis">0</div>
-            </div>
-            <div class="card-small">
-              <div class="small muted">Պասիվ API-ներ</div>
-              <div class="stat-num" id="passiveApis">0</div>
-            </div>
-            <div class="card-small">
-              <div class="small muted">Ժամկետով API-ներ</div>
-              <div class="stat-num" id="expiredApis">0</div>
-            </div>
-          </div>
+            // Գները մեկ քառակուսի մետրի համար
+            const servicePrices = {
+                'Մաքրում': 1000,
+                'Նորոգում': 5000,
+                'Դիզայն': 2000
+            };
 
-          <div style="margin-top:18px">
-            <h3>Quick Actions</h3>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-              <button id="addRandomApi" class="small-btn success">Add random API</button>
-              <button id="clearLogs" class="small-btn ghost">Clear error logs</button>
-              <button id="exportBackup" class="small-btn ghost">Export Backup (JSON)</button>
-              <label class="small-btn ghost" style="cursor:pointer">
-                Import Backup <input id="importBackup" type="file" accept="application/json" style="display:none">
-              </label>
-            </div>
-          </div>
+            // Կառույցի տեսակի փոփոխություն
+            structureTypeSelect.addEventListener('change', function() {
+                document.querySelectorAll('.nested-fields').forEach(field => field.classList.add('hidden'));
+                const selectedType = structureTypeSelect.value;
+                if (selectedType === 'Տուն') {
+                    document.getElementById('houseFields').classList.remove('hidden');
+                } else if (selectedType === 'Բնակարան') {
+                    document.getElementById('apartmentFields').classList.remove('hidden');
+                } else if (selectedType === 'Շինություն') {
+                    document.getElementById('buildingFields').classList.remove('hidden');
+                }
+            });
 
-        </section>
+            // Արժեքի հաշվարկ
+            function calculatePrice() {
+                const service = serviceTypeSelect.value;
+                const area = parseFloat(areaInput.value);
+                
+                if (service && area > 0) {
+                    const price = servicePrices[service] * area;
+                    priceOutput.textContent = `${price} Դրամ`;
+                } else {
+                    priceOutput.textContent = '0 Դրամ';
+                }
+            }
 
-        <section id="elements" class="view hidden">
-          <h2>Elements</h2>
-          <div class="elements-area">
-            <div class="element-palette card-small palette">
-              <div style="font-weight:700;margin-bottom:8px">Palette (drag)</div>
-              <div class="item" draggable="true" data-type="text">Text Block</div>
-              <div class="item" draggable="true" data-type="button">Button</div>
-              <div class="item" draggable="true" data-type="image">Image Placeholder</div>
-              <div class="item" draggable="true" data-type="card">Info Card</div>
-              <div class="small muted">Drag items into the canvas then Publish to apply to User page.</div>
-            </div>
+            serviceTypeSelect.addEventListener('change', calculatePrice);
+            areaInput.addEventListener('input', calculatePrice);
 
-            <div class="canvas card-small" id="canvas" >
-              <div class="small muted">Drop elements here</div>
-            </div>
-          </div>
-          <div class="publish-bar">
-            <input id="pageTitle" placeholder="User page title" style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);flex:1">
-            <button id="publishBtn" class="btn">Publish to User Page</button>
-            <button id="clearCanvas" class="ghost">Clear</button>
-          </div>
-        </section>
+            // Հեռախոսահամարի ֆորմատավորում
+            phoneNumberInput.value = '+374';
+            phoneNumberInput.addEventListener('input', function() {
+                if (!this.value.startsWith('+374')) {
+                    this.value = '+374';
+                }
+                if (this.value.length > 12) {
+                    this.value = this.value.slice(0, 12);
+                }
+            });
 
-        <section id="apis" class="view hidden">
-          <h2>API's</h2>
-          <div style="margin-top:12px">
-            <table>
-              <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Expires</th><th></th></tr></thead>
-              <tbody id="apisTable"></tbody>
-            </table>
-          </div>
-        </section>
+            // Ձևաթղթի ուղարկում
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
 
-        <section id="integrations" class="view hidden">
-          <h2>Integrations</h2>
-          <div style="margin-top:12px">
-            <div class="two-col">
-              <input id="integrationName" placeholder="Integration name">
-              <select id="integrationType"><option>Webhook</option><option>OAuth</option><option>API Key</option></select>
-            </div>
-            <div style="margin-top:8px;display:flex;gap:8px">
-              <button id="addIntegration" class="btn">Add Integration</button>
-              <button id="listIntegrations" class="ghost">Refresh</button>
-            </div>
+                if (webhookUrl === 'YOUR_GOOGLE_SHEETS_WEBHOOK_URL_HERE') {
+                    alert('Խնդրում ենք տեղադրել ձեր Google Sheets Webhook URL-ը JavaScript կոդում։');
+                    return;
+                }
 
-            <div style="margin-top:12px">
-              <table>
-                <thead><tr><th>Name</th><th>Type</th><th>Active</th><th></th></tr></thead>
-                <tbody id="integrationsTable"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+                
+                data['Արժեք'] = priceOutput.textContent; // Ավելացնում ենք հաշվարկված արժեքը
 
-        <section id="settings" class="view hidden">
-          <h2>Settings</h2>
-          <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div class="card-small">
-              <h4>Security</h4>
-              <div class="small muted">Create users and roles (password & username saved as MD5 hashes)</div>
-              <div style="margin-top:8px">
-                <input id="newUser" placeholder="Username" style="margin-bottom:8px">
-                <input id="newPass" placeholder="Password" style="margin-bottom:8px">
-                <select id="newRole"><option>admin</option><option>editor</option><option>viewer</option></select>
-                <div style="margin-top:8px;display:flex;gap:8px">
-                  <button id="createUser" class="btn">Create User</button>
-                  <button id="listUsers" class="ghost">List Users</button>
-                </div>
-                <div style="margin-top:8px">
-                  <table><thead><tr><th>Username (display)</th><th>Role</th><th></th></tr></thead><tbody id="usersTable"></tbody></table>
-                </div>
-              </div>
-            </div>
+                try {
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        mode: 'no-cors', // Սա անհրաժեշտ է Google Sheets Webhook-ի համար
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
 
-            <div class="card-small">
-              <h4>Backups</h4>
-              <div class="small muted">Export / Import full site backup (JSON)</div>
-              <div style="margin-top:8px;display:flex;gap:8px">
-                <button id="exportBtn" class="btn">Export</button>
-                <label class="ghost" style="cursor:pointer">Import <input id="importFile" type="file" accept="application/json" style="display:none"></label>
-              </div>
-            </div>
+                    alert('Ձեր պատվերն ուղարկվել է։ Շնորհակալություն։');
 
-            <div class="card-small">
-              <h4>System</h4>
-              <div class="small muted">Site info and error logs</div>
-              <div style="margin-top:8px">
-                <div><strong>App:</strong> Demo Admin Panel</div>
-                <div><strong>Version:</strong> 1.0.0</div>
-                <div><strong>Errors:</strong> <span id="errorCount">0</span></div>
-                <div style="margin-top:8px">
-                  <button id="showErrors" class="ghost">Show Errors</button>
-                </div>
-              </div>
-            </div>
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
 
-            <div class="card-small">
-              <h4>Storage</h4>
-              <div class="small muted">All Storage: 8 TB — Local simulated</div>
-              <div style="margin-top:8px">
-                <div style="display:flex;gap:8px;align-items:center">
-                  <div style="width:120px;height:10px;background:rgba(255,255,255,0.03);border-radius:6px;overflow:hidden">
-                    <div id="storageBar" style="height:10px;width:0%;background:linear-gradient(90deg,var(--accent),#60a5fa)"></div>
-                  </div>
-                  <div class="small muted" id="storageUsed">Used: 0 GB</div>
-                </div>
-                <div style="margin-top:8px">
-                  <button id="resetStorage" class="ghost">Reset Storage</button>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        <!-- User page preview -->
-        <section id="userPage" class="view hidden" style="margin-top:18px">
-          <h2>User Page Preview</h2>
-          <div id="userPreview" class="card-small" style="min-height:160px"></div>
-        </section>
-
-      </div>
-    </main>
-  </div>
-</div>
-
-<!-- MODAL TEMPLATES -->
-<div id="modalRoot"></div>
-
-<!-- MD5 implementation (lightweight, public domain style) -->
-<script>
-/*
- MD5 (JS) - compact implementation adapted for single-file use
- NOTE: MD5 is used because the user requested it; be aware MD5 is not suitable for real password storage in production.
-*/
-function md5cycle(x, k) {
-  var a = x[0], b = x[1], c = x[2], d = x[3];
-
-  a = ff(a, b, c, d, k[0], 7, -680876936);
-  d = ff(d, a, b, c, k[1], 12, -389564586);
-  c = ff(c, d, a, b, k[2], 17, 606105819);
-  b = ff(b, c, d, a, k[3], 22, -1044525330);
-  a = ff(a, b, c, d, k[4], 7, -176418897);
-  d = ff(d, a, b, c, k[5], 12, 1200080426);
-  c = ff(c, d, a, b, k[6], 17, -1473231341);
-  b = ff(b, c, d, a, k[7], 22, -45705983);
-  a = ff(a, b, c, d, k[8], 7, 1770035416);
-  d = ff(d, a, b, c, k[9], 12, -1958414417);
-  c = ff(c, d, a, b, k[10], 17, -42063);
-  b = ff(b, c, d, a, k[11], 22, -1990404162);
-  a = ff(a, b, c, d, k[12], 7, 1804603682);
-  d = ff(d, a, b, c, k[13], 12, -40341101);
-  c = ff(c, d, a, b, k[14], 17, -1502002290);
-  b = ff(b, c, d, a, k[15], 22, 1236535329);
-
-  a = gg(a, b, c, d, k[1], 5, -165796510);
-  d = gg(d, a, b, c, k[6], 9, -1069501632);
-  c = gg(c, d, a, b, k[11], 14, 643717713);
-  b = gg(b, c, d, a, k[0], 20, -373897302);
-  a = gg(a, b, c, d, k[5], 5, -701558691);
-  d = gg(d, a, b, c, k[10], 9, 38016083);
-  c = gg(c, d, a, b, k[15], 14, -660478335);
-  b = gg(b, c, d, a, k[4], 20, -405537848);
-  a = gg(a, b, c, d, k[9], 5, 568446438);
-  d = gg(d, a, b, c, k[14], 9, -1019803690);
-  c = gg(c, d, a, b, k[3], 14, -187363961);
-  b = gg(b, c, d, a, k[8], 20, 1163531501);
-  a = gg(a, b, c, d, k[13], 5, -1444681467);
-  d = gg(d, a, b, c, k[2], 9, -51403784);
-  c = gg(c, d, a, b, k[7], 14, 1735328473);
-  b = gg(b, c, d, a, k[12], 20, -1926607734);
-
-  a = hh(a, b, c, d, k[5], 4, -378558);
-  d = hh(d, a, b, c, k[8], 11, -2022574463);
-  c = hh(c, d, a, b, k[11], 16, 1839030562);
-  b = hh(b, c, d, a, k[14], 23, -35309556);
-  a = hh(a, b, c, d, k[1], 4, -1530992060);
-  d = hh(d, a, b, c, k[4], 11, 1272893353);
-  c = hh(c, d, a, b, k[7], 16, -155497632);
-  b = hh(b, c, d, a, k[10], 23, -1094730640);
-  a = hh(a, b, c, d, k[13], 4, 681279174);
-  d = hh(d, a, b, c, k[0], 11, -358537222);
-  c = hh(c, d, a, b, k[3], 16, -722521979);
-  b = hh(b, c, d, a, k[6], 23, 76029189);
-  a = hh(a, b, c, d, k[9], 4, -640364487);
-  d = hh(d, a, b, c, k[12], 11, -421815835);
-  c = hh(c, d, a, b, k[15], 16, 530742520);
-  b = hh(b, c, d, a, k[2], 23, -995338651);
-
-  a = ii(a, b, c, d, k[0], 6, -198630844);
-  d = ii(d, a, b, c, k[7], 10, 1126891415);
-  c = ii(c, d, a, b, k[14], 15, -1416354905);
-  b = ii(b, c, d, a, k[5], 21, -57434055);
-  a = ii(a, b, c, d, k[12], 6, 1700485571);
-  d = ii(d, a, b, c, k[3], 10, -1894986606);
-  c = ii(c, d, a, b, k[10], 15, -1051523);
-  b = ii(b, c, d, a, k[1], 21, -2054922799);
-  a = ii(a, b, c, d, k[8], 6, 1873313359);
-  d = ii(d, a, b, c, k[15], 10, -30611744);
-  c = ii(c, d, a, b, k[6], 15, -1560198380);
-  b = ii(b, c, d, a, k[13], 21, 1309151649);
-  a = ii(a, b, c, d, k[4], 6, -145523070);
-  d = ii(d, a, b, c, k[11], 10, -1120210379);
-  c = ii(c, d, a, b, k[2], 15, 718787259);
-  b = ii(b, c, d, a, k[9], 21, -343485551);
-
-  x[0] = add32(a, x[0]);
-  x[1] = add32(b, x[1]);
-  x[2] = add32(c, x[2]);
-  x[3] = add32(d, x[3]);
-
-}
-
-function cmn(q, a, b, x, s, t) {
-  a = add32(add32(a, q), add32(x, t));
-  return add32((a << s) | (a >>> (32 - s)), b);
-}
-function ff(a, b, c, d, x, s, t) {
-  return cmn((b & c) | ((~b) & d), a, b, x, s, t);
-}
-function gg(a, b, c, d, x, s, t) {
-  return cmn((b & d) | (c & (~d)), a, b, x, s, t);
-}
-function hh(a, b, c, d, x, s, t) {
-  return cmn(b ^ c ^ d, a, b, x, s, t);
-}
-function ii(a, b, c, d, x, s, t) {
-  return cmn(c ^ (b | (~d)), a, b, x, s, t);
-}
-
-function md51(s) {
-  var txt = '';
-  var n = s.length,
-    state = [1732584193, -271733879, -1732584194, 271733878],
-    i;
-  for (i = 64; i <= s.length; i += 64) {
-    md5cycle(state, md5blk(s.substring(i - 64, i)));
-  }
-  s = s.substring(i - 64);
-  var tail = new Array(16).fill(0);
-  for (i = 0; i < s.length; i++)
-    tail[i >> 2] |= s.charCodeAt(i) << ((i % 4) << 3);
-  tail[i >> 2] |= 0x80 << ((i % 4) << 3);
-  if (i > 55) {
-    md5cycle(state, tail);
-    tail = new Array(16).fill(0);
-  }
-  tail[14] = n * 8;
-  md5cycle(state, tail);
-  return state;
-}
-
-function md5blk(s) {
-  var md5blks = [];
-  for (var i = 0; i < 64; i += 4) {
-    md5blks[i >> 2] = s.charCodeAt(i) +
-      (s.charCodeAt(i + 1) << 8) +
-      (s.charCodeAt(i + 2) << 16) +
-      (s.charCodeAt(i + 3) << 24);
-  }
-  return md5blks;
-}
-
-var hex_chr = '0123456789abcdef'.split('');
-
-function rhex(n) {
-  var s = '';
-  for (var j = 0; j < 4; j++)
-    s += hex_chr[(n >> (j * 8 + 4)) & 0x0F] +
-      hex_chr[(n >> (j * 8)) & 0x0F];
-  return s;
-}
-
-function hex(x) {
-  for (var i = 0; i < x.length; i++)
-    x[i] = rhex(x[i]);
-  return x.join('');
-}
-
-function md5(s) {
-  return hex(md51(s));
-}
-
-function add32(a, b) {
-  return (a + b) & 0xFFFFFFFF;
-}
-if (md5('hello') !== '5d41402abc4b2a76b9719d911017c592') {
-  // sanity check: fallback (shouldn't be needed in modern browsers)
-  // (this branch won't be triggered normally)
-}
-
-/* -----------------------
-   Admin Panel logic (modified to store/compare MD5 hashes)
-   ----------------------- */
-
-const initialState = {
-  
-  users: [
-    {
-      usernameHash: '21232f297a57a5a743894a0e4a801fc3',
-      passwordHash: '1bb956ab7a6fe1b1cc55b0839e49c7b4',
-      role: 'admin',
-      displayName: null
-    }
-  ],
-  apis: [],
-  integrations: [],
-  elements: {pageTitle:'', items:[]},
-  errors: []
-};
-
-const SAVE_KEY = 'demo_admin_state_v1_md5';
-let state = loadState();
-let autoSaveTimer = null;
-let currentView = 'dashboard';
-let loggedInUser = null; // will store object {usernameHash, displayName, role}
-
-/* ---------- Init ---------- */
-document.addEventListener('DOMContentLoaded',()=>{
-  initLogin();
-  initNav();
-  initDashboard();
-  initElements();
-  initAPIs();
-  initIntegrations();
-  initSettings();
-  initUserPage();
-  startRealtimeSimulator();
-  updateServerTime();
-  setInterval(updateServerTime,1000);
-});
-
-/* ---------- Storage & Autosave ---------- */
-function loadState(){
-  try{
-    const raw = localStorage.getItem(SAVE_KEY);
-    if(raw) return JSON.parse(raw);
-  }catch(e){console.error(e)}
-  return JSON.parse(JSON.stringify(initialState));
-}
-function saveState(){
-  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-  document.getElementById('saveState').innerText = 'Saved ' + new Date().toLocaleTimeString();
-  setTimeout(()=>{ document.getElementById('saveState').innerText='Idle' },1200);
-}
-function scheduleAutoSave(){
-  document.getElementById('saveState').innerText = 'Saving...';
-  if(autoSaveTimer) clearTimeout(autoSaveTimer);
-  autoSaveTimer = setTimeout(()=>{ saveState() }, 600);
-}
-
-/* ---------- Login ---------- */
-function initLogin(){
-  const loginBtn = document.getElementById('loginBtn');
-  loginBtn.addEventListener('click', doLogin);
-  document.getElementById('username').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin() });
-  document.getElementById('password').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doLogin() });
-}
-function doLogin(){
-  const u = document.getElementById('username').value.trim();
-  const p = document.getElementById('password').value;
-  if(!u || !p){ alert('Մուտքանունը և գաղտնաբառն անհրաժեշտ են'); return; }
-  const uh = md5(u);
-  const ph = md5(p);
-  // Find a user with matching usernameHash & passwordHash
-  const found = state.users.find(x => x.usernameHash === uh && x.passwordHash === ph);
-  if(found){
-    loggedInUser = { usernameHash: uh, displayName: found.displayName || u, role: found.role };
-    document.getElementById('currentUser').innerText = loggedInUser.displayName;
-    document.getElementById('loginView').classList.add('hidden');
-    document.getElementById('appView').classList.remove('hidden');
-    document.getElementById('appView').removeAttribute('aria-hidden');
-    document.getElementById('exitBtn').addEventListener('click', askExit);
-    // If the stored user had no displayName (initial admin), store the displayName now (session-safe)
-    if(!found.displayName){
-      found.displayName = u; scheduleAutoSave();
-    }
-    scheduleAutoSave();
-    renderAll();
-  } else {
-    alert('Մուտքագրումը մերժված է։ Սխալ մուտքանուն կամ գաղտնաբառ։');
-  }
-}
-
-/* ---------- Navigation ---------- */
-function initNav(){
-  document.querySelectorAll('#nav button').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('#nav button').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      showView(btn.dataset.view);
-    });
-  });
-}
-function showView(name){
-  currentView = name;
-  document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
-  const el = document.getElementById(name);
-  if(el) el.classList.remove('hidden');
-  if(name === 'elements') { document.getElementById('userPage').classList.remove('hidden'); } else { document.getElementById('userPage').classList.add('hidden') }
-  scheduleAutoSave();
-}
-
-/* ---------- Dashboard ---------- */
-function initDashboard(){
-  document.getElementById('addRandomApi').addEventListener('click', addRandomApi);
-  document.getElementById('clearLogs').addEventListener('click', ()=>{ if(confirm('Ցանկանում եք մաքրել error logs-ը?')){ state.errors = []; scheduleAutoSave(); updateErrorCount(); }});
-  document.getElementById('exportBackup').addEventListener('click', exportBackup);
-  document.getElementById('importBackup').addEventListener('change', importBackupFromInput);
-  updateStatsGrid();
-  updateErrorCount();
-}
-function updateStatsGrid(){
-  const total = state.apis.length;
-  const active = state.apis.filter(a=>a.status==='active').length;
-  const passive = state.apis.filter(a=>a.status==='passive').length;
-  const expired = state.apis.filter(a=>a.status==='expired').length;
-  document.getElementById('totalApis').innerText = total;
-  document.getElementById('activeApis').innerText = active;
-  document.getElementById('passiveApis').innerText = passive;
-  document.getElementById('expiredApis').innerText = expired;
-}
-
-/* ---------- APIs ---------- */
-function initAPIs(){
-  renderAPIs();
-}
-function renderAPIs(){
-  const tbody = document.getElementById('apisTable');
-  tbody.innerHTML = '';
-  state.apis.forEach(api=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${escapeHtml(api.title)}</td><td>${escapeHtml(api.type)}</td><td>${escapeHtml(api.status)}</td><td>${api.expires || '-'}</td><td><button class="ghost" data-id="${api.id}">Delete</button></td>`;
-    tbody.appendChild(tr);
-    tr.querySelector('button').addEventListener('click', (e)=>{
-      confirmDelete(()=>{ state.apis = state.apis.filter(a=>a.id!==api.id); scheduleAutoSave(); renderAPIs(); updateStatsGrid(); updateStorage(); });
-    });
-  });
-}
-
-/* ---------- Integrations ---------- */
-function initIntegrations(){
-  document.getElementById('addIntegration').addEventListener('click', ()=>{
-    const name = document.getElementById('integrationName').value.trim();
-    const type = document.getElementById('integrationType').value;
-    if(!name){ alert('Անվանումը պարտադիր է'); return; }
-    state.integrations.push({id:uid(), name, type, active:true});
-    document.getElementById('integrationName').value='';
-    scheduleAutoSave();
-    renderIntegrations();
-  });
-  document.getElementById('listIntegrations').addEventListener('click', renderIntegrations);
-  renderIntegrations();
-}
-function renderIntegrations(){
-  const tbody = document.getElementById('integrationsTable'); tbody.innerHTML='';
-  state.integrations.forEach(i=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${escapeHtml(i.name)}</td><td>${escapeHtml(i.type)}</td><td>${i.active? 'Yes':'No'}</td><td><button class="ghost" data-id="${i.id}">${i.active? 'Deactivate':'Activate'}</button></td>`;
-    tbody.appendChild(tr);
-    tr.querySelector('button').addEventListener('click', ()=>{
-      i.active = !i.active; scheduleAutoSave(); renderIntegrations();
-    });
-  });
-}
-
-/* ---------- Elements (Drag & Drop) ---------- */
-function initElements(){
-  const paletteItems = document.querySelectorAll('.palette .item');
-  paletteItems.forEach(it=>{
-    it.addEventListener('dragstart', (e)=>{
-      e.dataTransfer.setData('text/plain', it.dataset.type);
-    });
-  });
-
-  const canvas = document.getElementById('canvas');
-  canvas.addEventListener('dragover', (e)=>{ e.preventDefault(); canvas.style.borderColor = 'rgba(45,212,191,0.3)'; });
-  canvas.addEventListener('dragleave', ()=>{ canvas.style.borderColor='' });
-  canvas.addEventListener('drop', (e)=>{
-    e.preventDefault(); canvas.style.borderColor='';
-    const type = e.dataTransfer.getData('text/plain');
-    addElementToCanvas(type);
-  });
-
-  document.getElementById('publishBtn').addEventListener('click', publishUserPage);
-  document.getElementById('clearCanvas').addEventListener('click', ()=>{ confirmDelete(()=>{ state.elements.items=[]; renderCanvas(); scheduleAutoSave(); updateStorage(); }) });
-  renderCanvas();
-}
-function addElementToCanvas(type){
-  const id = uid();
-  let content = '';
-  if(type==='text') content = 'Sample text block';
-  if(type==='button') content = 'Click me';
-  if(type==='image') content = 'Image placeholder';
-  if(type==='card') content = 'Info card';
-  state.elements.items.push({id,type,content});
-  renderCanvas();
-  scheduleAutoSave();
-  updateStorage();
-}
-function renderCanvas(){
-  const canvas = document.getElementById('canvas');
-  canvas.innerHTML = '';
-  if(state.elements.items.length===0){
-    canvas.innerHTML = '<div class="small muted">Drop elements here</div>';
-    return;
-  }
-  state.elements.items.forEach(it=>{
-    const div = document.createElement('div'); div.className='el';
-    div.innerHTML = `<div style="flex:1"><strong>${escapeHtml(it.type)}</strong><div class="small muted">${escapeHtml(it.content)}</div></div><div><button class="ghost edit" data-id="${it.id}">Edit</button> <button class="danger del" data-id="${it.id}">Delete</button></div>`;
-    canvas.appendChild(div);
-    div.querySelector('.del').addEventListener('click', ()=>{ confirmDelete(()=>{ state.elements.items = state.elements.items.filter(x=>x.id!==it.id); renderCanvas(); scheduleAutoSave(); updateStorage(); }) });
-    div.querySelector('.edit').addEventListener('click', ()=>{
-      const newC = prompt('Edit content', it.content);
-      if(newC!==null){ it.content = newC; renderCanvas(); scheduleAutoSave(); updateStorage(); }
-    });
-  });
-}
-
-/* ---------- Publish / User Page ---------- */
-function publishUserPage(){
-  const title = document.getElementById('pageTitle').value.trim() || 'User Page';
-  state.elements.pageTitle = title;
-  renderUserPreview();
-  document.getElementById('userPage').classList.remove('hidden');
-  scheduleAutoSave();
-  alert('Published to User Page (preview).');
-}
-function initUserPage(){
-  renderUserPreview();
-}
-function renderUserPreview(){
-  const root = document.getElementById('userPreview');
-  root.innerHTML = `<h3 style="margin-top:0">${escapeHtml(state.elements.pageTitle || 'User Page')}</h3>`;
-  state.elements.items.forEach(it=>{
-    if(it.type==='text'){
-      const d = document.createElement('div'); d.style.margin='6px 0'; d.innerText = it.content; root.appendChild(d);
-    } else if(it.type==='button'){
-      const b = document.createElement('button'); b.className='btn'; b.style.margin='6px 0'; b.innerText = it.content; root.appendChild(b);
-    } else if(it.type==='image'){
-      const p = document.createElement('div'); p.style.width='100%'; p.style.height='120px'; p.style.background='rgba(255,255,255,0.02)'; p.style.display='flex'; p.style.alignItems='center'; p.style.justifyContent='center'; p.style.borderRadius='8px'; p.innerText = it.content; root.appendChild(p);
-    } else if(it.type==='card'){
-      const c = document.createElement('div'); c.style.padding='10px'; c.style.margin='6px 0'; c.style.border='1px solid rgba(255,255,255,0.03)'; c.style.borderRadius='8px'; c.innerHTML = `<strong>${escapeHtml(it.content)}</strong><div class="small muted">Card detail</div>`; root.appendChild(c);
-    }
-  });
-}
-
-/* ---------- Users (Settings) ---------- */
-function initSettings(){
-  document.getElementById('createUser').addEventListener('click', ()=>{
-    const u = document.getElementById('newUser').value.trim();
-    const p = document.getElementById('newPass').value;
-    const r = document.getElementById('newRole').value;
-    if(!u||!p){ alert('Username and password required'); return; }
-    const uh = md5(u);
-    if(state.users.some(x=>x.usernameHash===uh)){ alert('User exists'); return; }
-    const ph = md5(p);
-    state.users.push({usernameHash:uh, passwordHash:ph, role:r, displayName:u});
-    document.getElementById('newUser').value=''; document.getElementById('newPass').value='';
-    scheduleAutoSave(); renderUsers();
-  });
-  document.getElementById('listUsers').addEventListener('click', renderUsers);
-  document.getElementById('exportBtn').addEventListener('click', exportBackup);
-  document.getElementById('importFile').addEventListener('change', importBackupFromInput);
-  document.getElementById('showErrors').addEventListener('click', showErrors);
-  document.getElementById('resetStorage').addEventListener('click', ()=>{ if(confirm('Reset storage and remove all user-created data?')){ state = JSON.parse(JSON.stringify(initialState)); saveState(); location.reload(); }});
-  renderUsers();
-}
-function renderUsers(){
-  const tbody = document.getElementById('usersTable'); tbody.innerHTML='';
-  state.users.forEach(u=>{
-    const dname = u.displayName || 'hidden';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${escapeHtml(dname)}</td><td>${escapeHtml(u.role)}</td><td><button class="ghost" data-u="${u.usernameHash}">Delete</button></td>`;
-    tbody.appendChild(tr);
-    tr.querySelector('button').addEventListener('click', ()=>{ confirmDelete(()=>{ state.users = state.users.filter(x=>x.usernameHash!==u.usernameHash); scheduleAutoSave(); renderUsers(); }) });
-  });
-}
-
-/* ---------- Backups ---------- */
-function exportBackup(){
-  const dataStr = JSON.stringify(state,null,2);
-  const blob = new Blob([dataStr],{type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download = 'admin-backup.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
-function importBackupFromInput(e){
-  const f = e.target.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = ()=> {
-    try{
-      const obj = JSON.parse(reader.result);
-      if(confirm('Ցանկանում եք ներմուծել պահուստը և փոխարինել տեղական տվյալները?')){
-        state = obj;
-        saveState();
-        location.reload();
-      }
-    }catch(err){ alert('Վավեր JSON չէ'); }
-  };
-  reader.readAsText(f);
-}
-
-/* ---------- System / Errors ---------- */
-function addError(msg){
-  state.errors.push({id:uid(), time:new Date().toISOString(), msg});
-  scheduleAutoSave(); updateErrorCount();
-}
-function updateErrorCount(){
-  document.getElementById('errorCount').innerText = state.errors.length;
-}
-
-/* ---------- Storage Simulation ---------- */
-const TOTAL_TB = 8;
-function updateStorage(){
-  let usedGB = 0;
-  state.apis.forEach(a=> usedGB += (a.sizeGB || 0.02));
-  usedGB += state.elements.items.length * 0.02;
-  usedGB = Math.round(usedGB*100)/100;
-  const usedPct = Math.min(100, Math.round((usedGB/(TOTAL_TB*1024))*10000)/100);
-  document.getElementById('storageUsed').innerText = `Used: ${usedGB} GB`;
-  document.getElementById('storageBar').style.width = (usedPct)+'%';
-}
-
-/* ---------- Realtime Simulator (simulate counts updating) ---------- */
-function startRealtimeSimulator(){
-  if(state.apis.length===0){
-    for(let i=0;i<3;i++){
-      state.apis.push({id:uid(), title:'API '+(i+1), type: i%2?'REST':'GraphQL', status: i%2?'active':'passive', expires: i===2? new Date(Date.now()+86400*1000).toISOString().slice(0,10): null, sizeGB: Math.round(Math.random()*20)/100});
-    }
-    scheduleAutoSave();
-  }
-  setInterval(()=>{
-    if(Math.random() < 0.25){
-      if(Math.random()<0.6){
-        state.apis.push({id:uid(), title:'API '+(state.apis.length+1), type: (Math.random()<0.5?'REST':'GraphQL'), status: (Math.random()<0.6?'active':'passive'), expires: (Math.random()<0.2? new Date(Date.now()+ (Math.random()*10|0)*86400*1000 : null)), sizeGB: Math.round(Math.random()*50)/100});
-      } else {
-        if(state.apis.length) state.apis.splice(Math.floor(Math.random()*state.apis.length),1);
-      }
-    } else {
-      if(state.apis.length){
-        const idx = Math.floor(Math.random()*state.apis.length);
-        const api = state.apis[idx];
-        api.status = (Math.random()<0.7?'active':'passive');
-        if(Math.random()<0.05) api.status='expired';
-      }
-    }
-    if(Math.random()<0.02) addError('Random simulated error at ' + new Date().toLocaleTimeString());
-    renderAPIs();
-    updateStatsGrid();
-    updateErrorCount();
-    updateStorage();
-    scheduleAutoSave();
-  }, 1200);
-}
-
-/* ---------- Utilities ---------- */
-function uid(){ return 'id_'+Math.random().toString(36).slice(2,9); }
-function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-/* ---------- Random API add ---------- */
-function addRandomApi(){
-  const a = {id:uid(), title:'API '+(state.apis.length+1), type: (Math.random()<0.5?'REST':'GraphQL'), status: (Math.random()<0.7?'active':'passive'), expires: (Math.random()<0.2? new Date(Date.now()+ (Math.random()*10|0)*86400*1000 : null)), sizeGB: Math.round(Math.random()*50)/100};
-  state.apis.push(a); scheduleAutoSave(); renderAPIs(); updateStatsGrid(); updateStorage();
-}
-
-/* ---------- Delete confirmation modal ---------- */
-function confirmDelete(action){
-  const modalRoot = document.getElementById('modalRoot');
-  const overlay = document.createElement('div'); overlay.className='overlay';
-  const modal = document.createElement('div'); modal.className='modal';
-  modal.innerHTML = `<h3>Վստահ եք, որ ցանկանում եք ջնջել?</h3><div class="small muted">Այս գործողությունը հնարավոր է չվերականգնել:</div>`;
-  const actions = document.createElement('div'); actions.className='actions';
-  const cancel = document.createElement('button'); cancel.className='ghost'; cancel.innerText='Չեղարկել';
-  const del = document.createElement('button'); del.className='danger'; del.innerText='Ջնջել';
-  actions.appendChild(cancel); actions.appendChild(del);
-  modal.appendChild(actions); overlay.appendChild(modal); modalRoot.appendChild(overlay);
-  cancel.addEventListener('click', ()=>{ overlay.remove(); });
-  del.addEventListener('click', ()=>{ overlay.remove(); action(); });
-}
-
-/* ---------- Exit confirmation ---------- */
-function askExit(){
-  const modalRoot = document.getElementById('modalRoot');
-  const overlay = document.createElement('div'); overlay.className='overlay';
-  const modal = document.createElement('div'); modal.className='modal';
-  modal.innerHTML = `<h3>Վստահ եք, որ ցանկանում եք դուրս գալ?</h3><div class="small muted">Դուք կհեռացվեք ադմին էջից:</div>`;
-  const actions = document.createElement('div'); actions.className='actions';
-  const cancel = document.createElement('button'); cancel.className='ghost'; cancel.innerText='Չեղարկել';
-  const out = document.createElement('button'); out.className='danger'; out.innerText='Ելք';
-  actions.appendChild(cancel); actions.appendChild(out);
-  modal.appendChild(actions); overlay.appendChild(modal); modalRoot.appendChild(overlay);
-  cancel.addEventListener('click', ()=>{ overlay.remove(); });
-  out.addEventListener('click', ()=>{
-    overlay.remove();
-    document.getElementById('appView').classList.add('hidden');
-    document.getElementById('loginView').classList.remove('hidden');
-    document.getElementById('exitBtn').classList.add('hidden');
-    loggedInUser = null;
-    scheduleAutoSave();
-  });
-}
-
-/* ---------- Errors viewer ---------- */
-function showErrors(){
-  const modalRoot = document.getElementById('modalRoot');
-  const overlay = document.createElement('div'); overlay.className='overlay';
-  const modal = document.createElement('div'); modal.className='modal';
-  modal.innerHTML = `<h3>Error Logs (${state.errors.length})</h3><div style="max-height:300px;overflow:auto;margin-top:8px">${state.errors.map(e=>`<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.02)"><div class="small muted">${e.time}</div><div>${escapeHtml(e.msg)}</div></div>`).join('')}</div>`;
-  const actions = document.createElement('div'); actions.className='actions';
-  const close = document.createElement('button'); close.className='ghost'; close.innerText='Close';
-  const clear = document.createElement('button'); clear.className='danger'; clear.innerText='Clear';
-  actions.appendChild(close); actions.appendChild(clear);
-  modal.appendChild(actions); overlay.appendChild(modal); modalRoot.appendChild(overlay);
-  close.addEventListener('click', ()=> overlay.remove() );
-  clear.addEventListener('click', ()=>{ if(confirm('Արդյոք իսկապես մաքրե՞լ error logs-ը')){ state.errors=[]; scheduleAutoSave(); overlay.remove(); updateErrorCount(); } });
-}
-
-/* ---------- Render helpers ---------- */
-function renderAll(){
-  renderAPIs(); renderIntegrations(); renderUsers(); renderCanvas(); renderUserPreview(); updateStatsGrid(); updateErrorCount(); updateStorage();
-}
-
-/* ---------- Small helpers ---------- */
-function updateServerTime(){
-  document.getElementById('serverTime').innerText = new Date().toLocaleString();
-}
-
-/* ---------- Init render ---------- */
-renderAll();
-
-</script>
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Պատվերը ուղարկելու ժամանակ սխալ է առաջացել։');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
