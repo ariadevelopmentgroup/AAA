@@ -1,334 +1,419 @@
 <!DOCTYPE html>
 <html lang="hy">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Պատվերի ձևաթուղթ</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Պատվերի ձևաթուղթ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
-        :root {
-            --primary-color: #4CAF50;
-            --secondary-color: #388E3C;
-            --background-color: #f4f7f6;
-            --text-color: #333;
-            --border-color: #ddd;
-            --border-radius: 8px;
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --font-family: 'Roboto', sans-serif;
-        }
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #388E3C;
+            --background-color: #f4f7f6;
+            --text-color: #333;
+            --border-color: #ddd;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --font-family: 'Roboto', sans-serif;
+        }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        body {
-            font-family: var(--font-family);
-            background-color: var(--background-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative; /* For pop-up positioning */
+        }
 
-        .form-container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            max-width: 600px;
-            width: 100%;
-        }
+        .form-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 600px;
+            width: 100%;
+        }
 
-        h2 {
-            text-align: center;
-            color: var(--primary-color);
-            margin-bottom: 30px;
-        }
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .form-group {
+            margin-bottom: 20px;
+        }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
 
-        input[type="text"],
-        input[type="tel"],
-        input[type="number"],
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            font-size: 16px;
-            transition: border-color 0.3s;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
+        input[type="text"],
+        input[type="tel"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: border-color 0.3s;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
 
-        input[type="text"]:focus,
-        input[type="tel"]:focus,
-        input[type="number"]:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
+        input[type="text"]:focus,
+        input[type="tel"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
 
-        /* Prevent input zoom on mobile */
-        @media (max-width: 768px) {
-            input[type="text"],
-            input[type="tel"],
-            input[type="number"],
-            select {
-                font-size: 16px;
-            }
-        }
+        /* Prevent input zoom on mobile */
+        @media (max-width: 768px) {
+            input[type="text"],
+            input[type="tel"],
+            input[type="number"],
+            select {
+                font-size: 16px;
+            }
+        }
 
-        .nested-fields {
-            margin-top: 15px;
-            padding-left: 20px;
-            border-left: 2px solid var(--border-color);
-        }
+        .nested-fields {
+            margin-top: 15px;
+            padding-left: 20px;
+            border-left: 2px solid var(--border-color);
+        }
 
-        .hidden {
-            display: none;
-        }
-        
-        .price-output {
-            margin-top: 10px;
-            font-weight: bold;
-            font-size: 18px;
-            color: var(--secondary-color);
-            text-align: center;
-        }
+        .hidden {
+            display: none;
+        }
+        
+        .price-output {
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 18px;
+            color: var(--secondary-color);
+            text-align: center;
+        }
 
-        .cta-button {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            background-color: var(--primary-color);
-            color: #fff;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
+        .cta-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
 
-        .cta-button:hover {
-            background-color: var(--secondary-color);
-        }
+        .cta-button:hover {
+            background-color: var(--secondary-color);
+        }
 
-        .message {
-            text-align: center;
-            margin-top: 20px;
-            font-weight: bold;
-            color: var(--secondary-color);
-        }
+        /* Pop-up styles */
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
 
-        /* Responsive styles */
-        @media (max-width: 600px) {
-            .form-container {
-                padding: 20px;
-            }
-        }
-    </style>
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive styles */
+        @media (max-width: 600px) {
+            .form-container {
+                padding: 20px;
+            }
+            .popup {
+                padding: 30px;
+                font-size: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="form-container">
-        <h2>Պատվերի ձևաթուղթ</h2>
-        <form id="orderForm">
-            <div class="form-group">
-                <label for="fullName">Անուն Ազգանուն</label>
-                <input type="text" id="fullName" name="Անուն Ազգանուն" required>
-            </div>
+    <div class="form-container">
+        <h2>Պատվերի ձևաթուղթ</h2>
+        <form id="orderForm">
+            <div class="form-group">
+                <label for="fullName">Անուն Ազգանուն</label>
+                <input type="text" id="fullName" name="Անուն Ազգանուն" required>
+            </div>
 
-            <div class="form-group">
-                <label for="phoneNumber">Հեռախոսահամար</label>
-                <input type="tel" id="phoneNumber" name="Հեռախոսահամար" placeholder="+374" required maxlength="12">
-            </div>
+            <div class="form-group">
+                <label for="phoneNumber">Հեռախոսահամար</label>
+                <input type="tel" id="phoneNumber" name="Հեռախոսահամար" placeholder="+374" required maxlength="12">
+            </div>
 
-            <div class="form-group">
-                <label for="address">Հասցե</label>
-                <input type="text" id="address" name="Հասցե" required>
-            </div>
+            <div class="form-group">
+                <label for="address">Հասցե</label>
+                <input type="text" id="address" name="Հասցե" required>
+            </div>
 
-            <div class="form-group">
-                <label for="structureType">Կառույցի տեսակ</label>
-                <select id="structureType" name="Կառույցի տեսակ" required>
-                    <option value="" disabled selected>- Ընտրեք կառույցի տեսակը -</option>
-                    <option value="Տուն">Տուն</option>
-                    <option value="Բնակարան">Բնակարան</option>
-                    <option value="Շինություն">Շինություն</option>
-                </select>
-            </div>
+            <div class="form-group">
+                <label for="structureType">Կառույցի տեսակ</label>
+                <select id="structureType" name="Կառույցի տեսակ" required>
+                    <option value="" disabled selected>- Ընտրեք կառույցի տեսակը -</option>
+                    <option value="Տուն">Տուն</option>
+                    <option value="Բնակարան">Բնակարան</option>
+                    <option value="Շինություն">Շինություն</option>
+                </select>
+            </div>
 
-            <div id="houseFields" class="nested-fields hidden">
-                <div class="form-group">
-                    <label for="houseNumber">Տուն №</label>
-                    <input type="number" id="houseNumber" name="Տուն №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
-                </div>
-            </div>
+            <div id="houseFields" class="nested-fields hidden">
+                <div class="form-group">
+                    <label for="houseNumber">Տուն №</label>
+                    <input type="number" id="houseNumber" name="Տուն №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
+                </div>
+            </div>
 
-            <div id="apartmentFields" class="nested-fields hidden">
-                <div class="form-group">
-                    <label for="buildingNumber">Շենք №</label>
-                    <input type="number" id="buildingNumber" name="Շենք №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
-                </div>
-                <div class="form-group">
-                    <label for="entranceNumber">Մուտք №</label>
-                    <input type="number" id="entranceNumber" name="Մուտք №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
-                </div>
-                <div class="form-group">
-                    <label for="floorNumber">Հարկ №</label>
-                    <input type="number" id="floorNumber" name="Հարկ №" maxlength="2" oninput="this.value=this.value.slice(0,2)">
-                </div>
-                <div class="form-group">
-                    <label for="apartmentNumber">Բնակարան №</label>
-                    <input type="number" id="apartmentNumber" name="Բնակարան №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
-                </div>
-            </div>
+            <div id="apartmentFields" class="nested-fields hidden">
+                <div class="form-group">
+                    <label for="buildingNumber">Շենք №</label>
+                    <input type="number" id="buildingNumber" name="Շենք №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
+                </div>
+                <div class="form-group">
+                    <label for="entranceNumber">Մուտք №</label>
+                    <input type="number" id="entranceNumber" name="Մուտք №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
+                </div>
+                <div class="form-group">
+                    <label for="floorNumber">Հարկ №</label>
+                    <input type="number" id="floorNumber" name="Հարկ №" maxlength="2" oninput="this.value=this.value.slice(0,2)">
+                </div>
+                <div class="form-group">
+                    <label for="apartmentNumber">Բնակարան №</label>
+                    <input type="number" id="apartmentNumber" name="Բնակարան №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
+                </div>
+            </div>
 
-            <div id="buildingFields" class="nested-fields hidden">
-                <div class="form-group">
-                    <label for="constructionNumber">Շինություն №</label>
-                    <input type="number" id="constructionNumber" name="Շինություն №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
-                </div>
-            </div>
+            <div id="buildingFields" class="nested-fields hidden">
+                <div class="form-group">
+                    <label for="constructionNumber">Շինություն №</label>
+                    <input type="number" id="constructionNumber" name="Շինություն №" maxlength="3" oninput="this.value=this.value.slice(0,3)">
+                </div>
+            </div>
 
-            <div class="form-group">
-                <label for="serviceType">Ծառայության տեսակ</label>
-                <select id="serviceType" name="Ծառայության տեսակ" required>
-                    <option value="" disabled selected>- Ընտրեք ծառայությունը -</option>
-                    <option value="Մաքրում">Մաքրում - 1000դր/մ</option>
-                    <option value="Նորոգում">Նորոգում</option>
-                    <option value="Դիզայն">Դիզայն</option>
-                </select>
-            </div>
+            <div class="form-group">
+                <label for="serviceType">Ծառայության տեսակ</label>
+                <select id="serviceType" name="Ծառայության տեսակ" required>
+                    <option value="" disabled selected>- Ընտրեք ծառայությունը -</option>
+                    <option value="Մաքրում">Մաքրում - 1000դր/մ²</option>
+                    <option value="Նորոգում">Նորոգում - 5000դր/մ²</option>
+                    <option value="Դիզայն">Դիզայն - 2000դր/մ²</option>
+                </select>
+            </div>
 
-            <div class="form-group">
-                <label for="area">Մակերես (մ²)</label>
-                <input type="number" id="area" name="Մակերես" required min="1">
-            </div>
+            <div class="form-group">
+                <label for="area">Մակերես (մ²)</label>
+                <input type="number" id="area" name="Մակերես" required min="1">
+            </div>
 
-            <div class="form-group">
-                <label>Արժեք</label>
-                <div id="price" class="price-output">0 Դրամ</div>
-            </div>
-            
-            <button type="submit" class="cta-button">Ուղարկել</button>
-        </form>
-    </div>
+            <div class="form-group">
+                <label>Արժեք</label>
+                <div id="price" class="price-output">0 Դրամ</div>
+            </div>
+            
+            <button type="submit" class="cta-button">Ուղարկել</button>
+        </form>
+    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('orderForm');
-            const structureTypeSelect = document.getElementById('structureType');
-            const serviceTypeSelect = document.getElementById('serviceType');
-            const areaInput = document.getElementById('area');
-            const priceOutput = document.getElementById('price');
-            const phoneNumberInput = document.getElementById('phoneNumber');
+    <div id="popupOverlay" class="popup-overlay"></div>
+    <div id="popup" class="popup">
+        Շնորհակալություն, Ձեր պատվերը ուղարկվեց։
+    </div>
 
-            // Փոխեք սա ձեր Webhook URL-ով
-            const webhookUrl = 'YOUR_GOOGLE_SHEETS_WEBHOOK_URL_HERE';
-            
-            // Գները մեկ քառակուսի մետրի համար
-            const servicePrices = {
-                'Մաքրում': 1000,
-                'Նորոգում': 5000,
-                'Դիզայն': 2000
-            };
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('orderForm');
+            const structureTypeSelect = document.getElementById('structureType');
+            const serviceTypeSelect = document.getElementById('serviceType');
+            const areaInput = document.getElementById('area');
+            const priceOutput = document.getElementById('price');
+            const phoneNumberInput = document.getElementById('phoneNumber');
+            const popup = document.getElementById('popup');
+            const popupOverlay = document.getElementById('popupOverlay');
 
-            // Կառույցի տեսակի փոփոխություն
-            structureTypeSelect.addEventListener('change', function() {
-                document.querySelectorAll('.nested-fields').forEach(field => field.classList.add('hidden'));
-                const selectedType = structureTypeSelect.value;
-                if (selectedType === 'Տուն') {
-                    document.getElementById('houseFields').classList.remove('hidden');
-                } else if (selectedType === 'Բնակարան') {
-                    document.getElementById('apartmentFields').classList.remove('hidden');
-                } else if (selectedType === 'Շինություն') {
-                    document.getElementById('buildingFields').classList.remove('hidden');
-                }
-            });
+            // Փոխեք սա ձեր Webhook URL-ով
+            const webhookUrl = 'YOUR_GOOGLE_SHEETS_WEBHOOK_URL_HERE';
+            
+            // Գները մեկ քառակուսի մետրի համար
+            const servicePrices = {
+                'Մաքրում': 1000,
+                'Նորոգում': 5000,
+                'Դիզայն': 2000
+            };
 
-            // Արժեքի հաշվարկ
-            function calculatePrice() {
-                const service = serviceTypeSelect.value;
-                const area = parseFloat(areaInput.value);
-                
-                if (service && area > 0) {
-                    const price = servicePrices[service] * area;
-                    priceOutput.textContent = `${price} Դրամ`;
-                } else {
-                    priceOutput.textContent = '0 Դրամ';
-                }
-            }
+            // Կառույցի տեսակի փոփոխություն
+            structureTypeSelect.addEventListener('change', function() {
+                document.querySelectorAll('.nested-fields').forEach(field => field.classList.add('hidden'));
+                const selectedType = structureTypeSelect.value;
+                if (selectedType === 'Տուն') {
+                    document.getElementById('houseFields').classList.remove('hidden');
+                } else if (selectedType === 'Բնակարան') {
+                    document.getElementById('apartmentFields').classList.remove('hidden');
+                } else if (selectedType === 'Շինություն') {
+                    document.getElementById('buildingFields').classList.remove('hidden');
+                }
+                saveFormState();
+            });
 
-            serviceTypeSelect.addEventListener('change', calculatePrice);
-            areaInput.addEventListener('input', calculatePrice);
+            // Արժեքի հաշվարկ
+            function calculatePrice() {
+                const service = serviceTypeSelect.value;
+                const area = parseFloat(areaInput.value);
+                
+                if (service && area > 0) {
+                    const price = servicePrices[service.split(' ')[0]] * area;
+                    priceOutput.textContent = `${price} Դրամ`;
+                } else {
+                    priceOutput.textContent = '0 Դրամ';
+                }
+            }
 
-            // Հեռախոսահամարի ֆորմատավորում
-            phoneNumberInput.value = '+374';
-            phoneNumberInput.addEventListener('input', function() {
-                if (!this.value.startsWith('+374')) {
-                    this.value = '+374';
-                }
-                if (this.value.length > 12) {
-                    this.value = this.value.slice(0, 12);
-                }
-            });
+            serviceTypeSelect.addEventListener('change', calculatePrice);
+            areaInput.addEventListener('input', calculatePrice);
 
-            // Ձևաթղթի ուղարկում
-            form.addEventListener('submit', async function(event) {
-                event.preventDefault();
+            // Հեռախոսահամարի ֆորմատավորում
+            phoneNumberInput.value = '+374';
+            phoneNumberInput.addEventListener('input', function() {
+                if (!this.value.startsWith('+374')) {
+                    this.value = '+374';
+                }
+                if (this.value.length > 12) {
+                    this.value = this.value.slice(0, 12);
+                }
+                saveFormState();
+            });
 
-                if (webhookUrl === 'YOUR_GOOGLE_SHEETS_WEBHOOK_URL_HERE') {
-                    alert('Խնդրում ենք տեղադրել ձեր Google Sheets Webhook URL-ը JavaScript կոդում։');
-                    return;
-                }
+            // Տվյալների պահպանում
+            function saveFormState() {
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+                data['Կառույցի տեսակ'] = structureTypeSelect.value;
+                localStorage.setItem('orderFormState', JSON.stringify(data));
+            }
+            
+            // Տվյալների բեռնում
+            function loadFormState() {
+                const savedData = JSON.parse(localStorage.getItem('orderFormState'));
+                if (savedData) {
+                    for (const key in savedData) {
+                        const element = document.querySelector(`[name="${key}"]`);
+                        if (element) {
+                            element.value = savedData[key];
+                        }
+                    }
+                    // Show nested fields based on loaded state
+                    const selectedType = savedData['Կառույցի տեսակ'];
+                    if (selectedType === 'Տուն') {
+                        document.getElementById('houseFields').classList.remove('hidden');
+                    } else if (selectedType === 'Բնակարան') {
+                        document.getElementById('apartmentFields').classList.remove('hidden');
+                    } else if (selectedType === 'Շինություն') {
+                        document.getElementById('buildingFields').classList.remove('hidden');
+                    }
+                    calculatePrice();
+                }
+            }
 
-                const formData = new FormData(form);
-                const data = {};
-                formData.forEach((value, key) => {
-                    data[key] = value;
-                });
-                
-                data['Արժեք'] = priceOutput.textContent; // Ավելացնում ենք հաշվարկված արժեքը
+            document.querySelectorAll('input, select').forEach(element => {
+                element.addEventListener('input', saveFormState);
+                element.addEventListener('change', saveFormState);
+            });
+            
+            // Ձևաթղթի ուղարկում
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
 
-                try {
-                    const response = await fetch(webhookUrl, {
-                        method: 'POST',
-                        mode: 'no-cors', // Սա անհրաժեշտ է Google Sheets Webhook-ի համար
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(data)
-                    });
+                if (webhookUrl === 'YOUR_GOOGLE_SHEETS_WEBHOOK_URL_HERE') {
+                    alert('Խնդրում ենք տեղադրել ձեր Google Sheets Webhook URL-ը JavaScript կոդում։');
+                    return;
+                }
 
-                    alert('Ձեր պատվերն ուղարկվել է։ Շնորհակալություն։');
+                const formData = new FormData(form);
+                const data = {};
+                formData.forEach((value, key) => {
+                    data[key] = value;
+                });
+                
+                data['Արժեք'] = priceOutput.textContent; // Ավելացնում ենք հաշվարկված արժեքը
 
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 5000);
+                try {
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        mode: 'no-cors', // Սա անհրաժեշտ է Google Sheets Webhook-ի համար
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
 
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Պատվերը ուղարկելու ժամանակ սխալ է առաջացել։');
-                }
-            });
-        });
-    </script>
+                    // Show pop-up
+                    popup.style.display = 'block';
+                    popupOverlay.style.display = 'block';
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 4000);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Պատվերը ուղարկելու ժամանակ սխալ է առաջացել։');
+                }
+            });
+
+            loadFormState();
+        });
+    </script>
 </body>
 </html>
 
